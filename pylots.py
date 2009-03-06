@@ -10,28 +10,29 @@ class ContactListener(b2ContactListener):
         self.ship = None
         self.ship_collision = False
 
-    def handle(self, point):
-        b1 = point.shape1.GetBody()
-        b2 = point.shape2.GetBody()
-        if b1 == self.ship or b2 == self.ship:
-            self.ship_collision = False
+    def ship_in_collision(self, point):
+        return self.ship in [point.shape1.GetBody(), point.shape2.GetBody()]
 
     def Add(self, point):
-        self.handle(point)
+        if self.ship_in_collision(point):
+            self.ship.GetUserData()['color'] = (1.0, 0.5, 0.5)
 
     def Persist(self, point):
-        self.handle(point)
+        if self.ship_in_collision(point):
+            self.ship.GetUserData()['color'] = (0.1, 0.8, 0.1)
 
     def Remove(self, point):
-        self.handle(point)
+        if self.ship_in_collision(point):
+            self.ship.GetUserData()['color'] = (0.0, 0.0, 0.0)
 
     def Result(self, point):
-        self.handle(point)
+        if self.ship_in_collision(point):
+            self.ship.GetUserData()['color'] = (0.6, 0.2, 0.2)
 
 class Ship(object):
     def __init__(self):
         self.body = None
-        self.thurst = False
+        self.thrust = False
         self.turn_direction = 0
 
     def apply_controls():
@@ -59,10 +60,11 @@ class Sim(object):
         bodyDef.angle = angle
         ship = self.world.CreateBody(bodyDef)
         shapeDef = b2PolygonDef()
-        points = [(0.0, 0.7), (-0.5, -0.7),  (0.5, -0.7)]
-        shapeDef.setVertices(points)
         shapeDef.density = 1
-        ship.CreateShape(shapeDef)
+        for points in [[(0.0, 0.7), (-0.5, -0.7),  (0.0, -0.5)], 
+                       [(0.0, 0.7), (0.0, -0.5),  (0.5, -0.7)]]:
+            shapeDef.setVertices(points)
+            ship.CreateShape(shapeDef)
         ship.SetMassFromShapes()
         ship.SetUserData(dict(color=(0.0, 0.0, 0.0)))
         self.ship = ship
@@ -78,7 +80,7 @@ class Sim(object):
             self.ship.SetAngularVelocity(2 * self.turn_direction)
 
     def add_box(self, position, angle=0, extents=(1, 1),
-                density=None, friction=0.3, color=(1.0, 1.0, 1.0)):
+                density=0.0, friction=0.3, color=(1.0, 1.0, 1.0)):
         bodyDef = b2BodyDef()
         bodyDef.position.Set(*position)
         bodyDef.angle = angle
@@ -86,14 +88,13 @@ class Sim(object):
         shapeDef = b2PolygonDef()
         shapeDef.friction = friction
         shapeDef.SetAsBox(*extents)
-        if density:
-            shapeDef.density = density 
+        shapeDef.density = density 
         body.CreateShape(shapeDef)
         body.SetMassFromShapes()
         body.SetUserData(dict(color=color))
 
     def add_circle(self, position, angle=0, radius=1,
-                   density=None, friction=0.3, color=(1.0, 1.0, 1.0)):
+                   density=0.0, friction=0.3, color=(1.0, 1.0, 1.0)):
         bodyDef = b2BodyDef()
         bodyDef.position.Set(*position)
         bodyDef.angle = angle
@@ -101,8 +102,7 @@ class Sim(object):
         shapeDef = b2CircleDef()
         shapeDef.friction = friction
         shapeDef.radius = radius
-        if density:
-            shapeDef.density = density 
+        shapeDef.density = density 
         body.CreateShape(shapeDef)
         body.SetMassFromShapes()
         body.SetUserData(dict(color=color))
@@ -132,6 +132,57 @@ class Sim(object):
                 self.ship = None
                 self.contact_listener.ship_collision = False
 
+def draw_world(world):
+    def draw_shape(shape):
+        def draw_circle(shape):
+            circle = shape.asCircle()
+            glBegin(GL_TRIANGLE_FAN)
+            steps = 100
+            radius = circle.GetRadius()
+            for i in xrange(steps + 1):
+                f = i / float(steps) * 2 * math.pi
+                glVertex2f(math.cos(f) * radius, math.sin(f) * radius)
+            glEnd()
+
+        def draw_polygon(shape):
+            polygon = shape.asPolygon()
+            glBegin(GL_TRIANGLE_FAN)
+            vertices = polygon.getVertices_tuple()
+            for x, y in vertices:
+                glVertex2f(x, y)
+            glEnd()
+
+        def draw_edge(shape):
+            # An edge chain that is a loop will cause this code to hang.
+            edge = shape.asEdge()
+            glBegin(GL_LINES)
+            while edge:
+                glVertex2f(*edge.GetVertex1().tuple())
+                glVertex2f(*edge.GetVertex2().tuple())
+                edge = edge.GetNextEdge()
+            glEnd()
+
+        draw_function = \
+            {
+                e_polygonShape: draw_polygon,
+                e_circleShape: draw_circle,
+                e_edgeShape: draw_edge,
+            }
+        draw_function[shape.GetType()](shape)
+
+    for body in world:
+        x, y = body.GetPosition().tuple()
+        angle = body.GetAngle()
+        body_data = body.GetUserData()
+        glPushMatrix()
+        glTranslatef(x, y, 0.0)
+        glRotatef(math.degrees(angle), 0.0, 0.0, 1.0)
+        color = body_data['color'] if body_data else (1.0, 1.0, 1.0)
+        glColor3f(*color)
+        for shape in body:
+            draw_shape(shape)
+        glPopMatrix()
+
 class SimWindow(pyglet.window.Window):
     SIDE = 400
     
@@ -160,55 +211,10 @@ class SimWindow(pyglet.window.Window):
     def update(self, dt):
         self.sim.step(dt)
 
-    def draw_circle(self, shape):
-        circle = shape.asCircle()
-        glBegin(GL_TRIANGLE_FAN)
-        steps = 100
-        radius = circle.GetRadius()
-        for i in xrange(steps + 1):
-            f = i / float(steps) * 2 * math.pi
-            glVertex2f(math.cos(f) * radius, math.sin(f) * radius)
-        glEnd()
-
-    def draw_polygon(self, shape):
-        polygon = shape.asPolygon()
-        glBegin(GL_TRIANGLE_FAN)
-        vertices = polygon.getVertices_tuple()
-        for x, y in vertices:
-            glVertex2f(x, y)
-        glEnd()
-
-    def draw_edge(self, shape):
-        # An edge chain that is a loop will cause this code to hang.
-        edge = shape.asEdge()
-        glBegin(GL_LINES)
-        while edge:
-            glVertex2f(*edge.GetVertex1().tuple())
-            glVertex2f(*edge.GetVertex2().tuple())
-            edge = edge.GetNextEdge()
-        glEnd()
-
     def on_draw(self):
         glClearColor(0.3, 0.3, 0.4, 1.0)
         self.clear()
-
-        for body in self.sim.world:
-            body_data = body.GetUserData()
-            for shape in body:
-                glColor3f(*body_data['color'])
-                x,y = body.GetPosition().tuple()
-                angle = body.GetAngle()
-                glPushMatrix()
-                glTranslatef(x, y, 0.0)
-                glRotatef(math.degrees(angle), 0.0, 0.0, 1.0)
-                type = shape.GetType()
-                if type == e_polygonShape:
-                    self.draw_polygon(shape)
-                elif type == e_circleShape:
-                    self.draw_circle(shape)
-                elif type == e_edgeShape:
-                    self.draw_edge(shape)
-                glPopMatrix()
+        draw_world(self.sim.world)
         
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:

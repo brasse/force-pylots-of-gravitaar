@@ -8,7 +8,6 @@ class ContactListener(b2ContactListener):
     def __init__(self):
         super(ContactListener, self).__init__()
         self.ship = None
-        self.ship_collision = False
 
     def ship_in_collision(self, point):
         return self.ship in [point.shape1.GetBody(), point.shape2.GetBody()]
@@ -35,6 +34,10 @@ class Ship(object):
         self.thrust = False
         self.turn_direction = 0
 
+    @property
+    def position(self):
+        return self.body.GetPosition().tuple()
+    
     def apply_controls():
         pass
 
@@ -119,18 +122,11 @@ class Sim(object):
         body.CreateShape(shapeDef)
         body.SetUserData(dict(color=color))
 
-    def step(self, dt):
-        self.time += dt
-        while self.time > self.time_step:
-            self.time -= self.time_step
-            vel_iters, pos_iters = 10, 8
-            self.apply_thrust()
-            self.apply_turn()
-            self.world.Step(self.time_step, vel_iters, pos_iters)
-            if self.contact_listener.ship_collision:
-                self.world.DestroyBody(self.ship[0])
-                self.ship = None
-                self.contact_listener.ship_collision = False
+    def step(self):
+        self.apply_thrust()
+        self.apply_turn()
+        vel_iters, pos_iters = 10, 8
+        self.world.Step(self.time_step, vel_iters, pos_iters)
 
 def draw_world(world):
     def draw_shape(shape):
@@ -184,14 +180,17 @@ def draw_world(world):
         glPopMatrix()
 
 class SimWindow(pyglet.window.Window):
-    SIDE = 400
-    
+    WINDOW_SIDE = 400
+    VIEWPORT_HALF_SIDE = 7.5 
+ 
     def __init__(self):
         pyglet.window.Window.__init__(self,
-                                      width=self.SIDE,
-                                      height=self.SIDE,
+                                      width=self.WINDOW_SIDE,
+                                      height=self.WINDOW_SIDE,
                                       caption='sim')
         self.sim = Sim()
+        self.time = 0
+        self.camera_position = (7.5, 7.5)
         self.sim.add_box((0, 1), -0.1, (50, 1), color=(0.0, 0.0, 1.0))
         self.sim.add_box((1.8, 9), extents=(.1, .1), color=(0.0, 1.0, 0.0))
         self.sim.add_box((2, 16), 0.5, (1, 1), 1)
@@ -203,19 +202,41 @@ class SimWindow(pyglet.window.Window):
         
     def on_resize(self, width, height):
         glViewport(0, 0, width, height)
+
+    def update(self, dt):
+        self.time += dt
+        while self.time > self.sim.time_step:
+            self.time -= self.sim.time_step
+            self.sim.step()
+
+    def update_camera_position(self):
+        MAX_DISTANCE = 2.5
+        new_camera = []
+        for cam, ship in zip(self.camera_position,
+                             self.sim.ship.GetPosition().tuple()):
+            distance = ship - cam
+            if distance > MAX_DISTANCE:
+                cam = cam + (distance - MAX_DISTANCE)
+            elif distance < -MAX_DISTANCE:
+                cam = cam + (distance + MAX_DISTANCE)
+            new_camera.append(cam)
+        self.camera_position = tuple(new_camera)
+        
+    def on_draw(self):
+        self.update_camera_position()
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        glOrtho(0.0, 15.0, 0.0, 15.0, -1.0, 1.0)
+        glOrtho(self.camera_position[0] - self.VIEWPORT_HALF_SIDE,
+                self.camera_position[0] + self.VIEWPORT_HALF_SIDE,
+                self.camera_position[1] - self.VIEWPORT_HALF_SIDE,
+                self.camera_position[1] + self.VIEWPORT_HALF_SIDE,
+                -1.0, 1.0)
         glMatrixMode(GL_MODELVIEW)
-        
-    def update(self, dt):
-        self.sim.step(dt)
 
-    def on_draw(self):
         glClearColor(0.3, 0.3, 0.4, 1.0)
         self.clear()
         draw_world(self.sim.world)
-        
+
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
             self.sim.thrust = True

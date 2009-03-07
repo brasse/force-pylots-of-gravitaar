@@ -29,8 +29,10 @@ class ContactListener(b2ContactListener):
             self.ship.GetUserData()['color'] = (0.6, 0.2, 0.2)
 
 class Ship(object):
-    def __init__(self):
-        self.body = None
+    def __init__(self, body):
+        self.body = body
+        self.turn_speed = 2
+        self.acceleration_force = 15
         self.thrust = False
         self.turn_direction = 0
 
@@ -38,8 +40,17 @@ class Ship(object):
     def position(self):
         return self.body.GetPosition().tuple()
     
-    def apply_controls():
-        pass
+    def apply_controls(self):
+        self.apply_thrust()
+        self.apply_turn()
+
+    def apply_thrust(self):
+        if self.thrust:
+            f = self.body.GetWorldVector((0, self.acceleration_force))
+            self.body.ApplyForce(f, self.body.GetPosition())
+
+    def apply_turn(self):
+        self.body.SetAngularVelocity(self.turn_speed * self.turn_direction)
 
 class Sim(object):
     def __init__(self):
@@ -70,17 +81,8 @@ class Sim(object):
             ship.CreateShape(shapeDef)
         ship.SetMassFromShapes()
         ship.SetUserData(dict(color=(0.0, 0.0, 0.0)))
-        self.ship = ship
         self.contact_listener.ship = ship
-
-    def apply_thrust(self):
-        if self.ship and self.thrust:
-            self.ship.ApplyForce(self.ship.GetWorldVector((0, 15)),
-                                 self.ship.GetPosition())
-
-    def apply_turn(self):
-        if self.ship:
-            self.ship.SetAngularVelocity(2 * self.turn_direction)
+        self.ship = Ship(ship)
 
     def add_box(self, position, angle=0, extents=(1, 1),
                 density=0.0, friction=0.3, color=(1.0, 1.0, 1.0)):
@@ -123,8 +125,7 @@ class Sim(object):
         body.SetUserData(dict(color=color))
 
     def step(self):
-        self.apply_thrust()
-        self.apply_turn()
+        self.ship.apply_controls()
         vel_iters, pos_iters = 10, 8
         self.world.Step(self.time_step, vel_iters, pos_iters)
 
@@ -213,7 +214,7 @@ class SimWindow(pyglet.window.Window):
         MAX_DISTANCE = 2.5
         new_camera = []
         for cam, ship in zip(self.camera_position,
-                             self.sim.ship.GetPosition().tuple()):
+                             self.sim.ship.position):
             distance = ship - cam
             if distance > MAX_DISTANCE:
                 cam = cam + (distance - MAX_DISTANCE)
@@ -239,17 +240,17 @@ class SimWindow(pyglet.window.Window):
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
-            self.sim.thrust = True
+            self.sim.ship.thrust = True
         elif symbol == pyglet.window.key.LEFT:
-            self.sim.turn_direction = 1
+            self.sim.ship.turn_direction = 1
         elif symbol == pyglet.window.key.RIGHT:
-            self.sim.turn_direction = -1
+            self.sim.ship.turn_direction = -1
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:
-            self.sim.thrust = False
+            self.sim.ship.thrust = False
         elif symbol in [pyglet.window.key.LEFT, pyglet.window.key.RIGHT]:
-            self.sim.turn_direction = 0
+            self.sim.ship.turn_direction = 0
         
 def main():
     window = SimWindow()

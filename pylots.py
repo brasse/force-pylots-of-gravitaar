@@ -59,6 +59,10 @@ class Ship(object):
     def position(self):
         return self.body.GetPosition().tuple()
     
+    @property
+    def velocity(self):
+        return self.body.GetLinearVelocity().tuple()
+
     def apply_controls(self):
         self.apply_thrust()
         self.apply_turn()
@@ -261,13 +265,13 @@ class SimWindow(pyglet.window.Window):
     def update_camera_position(self):
         MAX_DISTANCE = 2.5
         new_camera = []
-        for cam, ship in zip(self.camera_position,
-                             self.sim.ship.position):
+        ship = self.sim.ship
+        for cam, ship in zip(self.camera_position, ship.position):
             distance = ship - cam
             if distance > MAX_DISTANCE:
-                cam = cam + (distance - MAX_DISTANCE)
+                cam += (distance - MAX_DISTANCE)
             elif distance < -MAX_DISTANCE:
-                cam = cam + (distance + MAX_DISTANCE)
+                cam += (distance + MAX_DISTANCE)
             new_camera.append(cam)
         self.camera_position = tuple(new_camera)
         

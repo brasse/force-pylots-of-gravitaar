@@ -1,20 +1,39 @@
 import math
+import sys
+from collections import defaultdict
 
 from Box2D import *
 import pyglet
 from pyglet.gl import *
 
 class ContactListener(b2ContactListener):
-    def __init__(self):
+    def __init__(self, collectible_callback, ship_death_callback):
         super(ContactListener, self).__init__()
         self.ship = None
+        self.collectible = collectible_callback
+        self.ship_death = ship_death_callback
 
     def ship_in_collision(self, point):
         return self.ship in [point.shape1.GetBody(), point.shape2.GetBody()]
 
+    @staticmethod
+    def get_body(body1, body2, type):
+        if body1.GetUserData()['type'] == type:
+            return body1
+        assert(body2.GetUserData()['type'] == type)
+        return body2
+    
     def Add(self, point):
         if self.ship_in_collision(point):
             self.ship.GetUserData()['color'] = (1.0, 0.5, 0.5)
+        b1 = point.shape1.GetBody()
+        b2 = point.shape2.GetBody()
+        type_pair = set([b1.GetUserData()['type'],
+                         b2.GetUserData()['type']])
+        if type_pair == set(['ship', 'collectible']):
+            self.collectible(self.get_body(b1, b2, 'collectible'))
+        elif type_pair == set(['ship', 'terminal']):
+            self.ship_death()
 
     def Persist(self, point):
         if self.ship_in_collision(point):
@@ -53,11 +72,14 @@ class Ship(object):
         self.body.SetAngularVelocity(self.turn_speed * self.turn_direction)
 
 class Sim(object):
-    def __init__(self):
+    def __init__(self, game_end_callback):
+        self.game_end = game_end_callback
         self.time_step = 1.0 / 60.0
-        self.time = 0.0
+        self.total_time = 0.0
         self.thrust = False
         self.turn_direction = 0
+        self.collectibles = set()
+        self.remove_body_list = set()
 
         worldAABB = b2AABB()
         worldAABB.lowerBound.Set(-100, -100)
@@ -65,7 +87,7 @@ class Sim(object):
         gravity = b2Vec2(0, -5)
         doSleep = True
         self.world = b2World(worldAABB, gravity, doSleep)
-        self.contact_listener = ContactListener()
+        self.contact_listener = ContactListener(self.collect, self.ship_death)
         self.world.SetContactListener(self.contact_listener)
 
     def init_ship(self, position, angle=0):
@@ -80,54 +102,64 @@ class Sim(object):
             shapeDef.setVertices(points)
             ship.CreateShape(shapeDef)
         ship.SetMassFromShapes()
-        ship.SetUserData(dict(color=(0.0, 0.0, 0.0)))
+        ship.SetUserData(defaultdict(lambda: None,
+                                     color=(0.0, 0.0, 0.0), type='ship'))
         self.contact_listener.ship = ship
         self.ship = Ship(ship)
 
-    def add_box(self, position, angle=0, extents=(1, 1),
-                density=0.0, friction=0.3, color=(1.0, 1.0, 1.0)):
+    def add_object(self, position, angle=0, density=1, friction=0,
+                   shape_def=None, color=(1.0, 1.0, 1.0), type=None):
         bodyDef = b2BodyDef()
         bodyDef.position.Set(*position)
         bodyDef.angle = angle
         body = self.world.CreateBody(bodyDef)
-        shapeDef = b2PolygonDef()
-        shapeDef.friction = friction
-        shapeDef.SetAsBox(*extents)
-        shapeDef.density = density 
-        body.CreateShape(shapeDef)
+        shape_def.friction = friction
+        shape_def.density = density 
+        body.CreateShape(shape_def)
         body.SetMassFromShapes()
-        body.SetUserData(dict(color=color))
+        body.SetUserData(defaultdict(lambda: None,
+                                     color=color, type=type))
+        if type == 'collectible':
+            self.collectibles.add(body)
 
-    def add_circle(self, position, angle=0, radius=1,
-                   density=0.0, friction=0.3, color=(1.0, 1.0, 1.0)):
-        bodyDef = b2BodyDef()
-        bodyDef.position.Set(*position)
-        bodyDef.angle = angle
-        body = self.world.CreateBody(bodyDef)
-        shapeDef = b2CircleDef()
-        shapeDef.friction = friction
-        shapeDef.radius = radius
-        shapeDef.density = density 
-        body.CreateShape(shapeDef)
-        body.SetMassFromShapes()
-        body.SetUserData(dict(color=color))
+    def add_box(self, position, angle=0, extents=(1, 1),
+                density=0.0, friction=0.3, color=(1.0, 1.0, 1.0), type=None):
+        shape_def = b2PolygonDef()
+        shape_def.SetAsBox(*extents)
+        self.add_object(position, angle, density, friction, shape_def,
+                        color, type)
+            
+    def add_circle(self, position, angle=0, radius=1, density=0.0,
+                   friction=0.3, color=(1.0, 1.0, 1.0), type=None):
+        shape_def = b2CircleDef()
+        shape_def.radius = radius
+        self.add_object(position, angle, density, friction, shape_def,
+                        color, type)
 
     def add_edge(self, position, color):
-        bodyDef = b2BodyDef()
-        bodyDef.position.Set(*position)
-        body = self.world.CreateBody(bodyDef)
-        shapeDef = b2EdgeChainDef()
+        shape_def = b2EdgeChainDef()
         vertices = [(1, 0.2), (0, 0), (-1, 0.2)]
-        shapeDef.setVertices(vertices)
-        shapeDef.friction = 0.3
-        shapeDef.isALoop = False
-        body.CreateShape(shapeDef)
-        body.SetUserData(dict(color=color))
+        shape_def.setVertices(vertices)
+        shape_def.isALoop = False
+        self.add_object(position, shape_def=shape_def, color=color)
+
+    def collect(self, body):
+        self.remove_body_list.add(body)
+        self.collectibles.discard(body)
+
+    def ship_death(self):
+        self.game_end(died=True)
 
     def step(self):
+        self.total_time += self.time_step
         self.ship.apply_controls()
         vel_iters, pos_iters = 10, 8
         self.world.Step(self.time_step, vel_iters, pos_iters)
+        for body in self.remove_body_list:
+            self.world.DestroyBody(body)
+        self.remove_body_list = set()
+        if len(self.collectibles) == 0:
+            self.game_end()
 
 def draw_world(world):
     def draw_shape(shape):
@@ -189,18 +221,34 @@ class SimWindow(pyglet.window.Window):
                                       width=self.WINDOW_SIDE,
                                       height=self.WINDOW_SIDE,
                                       caption='sim')
-        self.sim = Sim()
+        self.sim = Sim(self.game_end)
         self.time = 0
         self.camera_position = (7.5, 7.5)
         self.sim.add_box((0, 1), -0.1, (50, 1), color=(0.0, 0.0, 1.0))
-        self.sim.add_box((1.8, 9), extents=(.1, .1), color=(0.0, 1.0, 0.0))
-        self.sim.add_box((2, 16), 0.5, (1, 1), 1)
-        self.sim.add_box((2, 4), 0.5, (1, 1), 1, color=(1.0, 0.0, 0.0))
-        self.sim.add_circle((13, 7), density=1, color=(1.0, 1.0, 0.0))
+        self.sim.add_box((1.8, 9), extents=(.1, .1), color=(0.0, 1.0, 0.0),
+                         type='collectible')
+        self.sim.add_box((10, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
+                         type='collectible')
+        self.sim.add_box((11, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
+                         type='collectible')
+        self.sim.add_box((16, 1), extents=(.1, .1), color=(0.0, 1.0, 0.0),
+                         type='collectible')
+        self.sim.add_box((2, 16), 0.5, (1, 1), 1, type='terminal')
+        self.sim.add_box((2, 4), 0.5, (1, 1), 1, color=(1.0, 0.0, 0.0),
+                         type='terminal')
+        self.sim.add_circle((13, 7), density=1, color=(1.0, 1.0, 0.0),
+                            type='collectible')
         self.sim.add_edge((13, 5), (0.0, 1.0, 0.0))
         self.sim.init_ship((7,7))
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
-        
+
+    def game_end(self, died=False):
+        if not died:
+            print self.sim.total_time
+        else:
+            print 'GAME_OVER'
+        sys.exit(0)
+
     def on_resize(self, width, height):
         glViewport(0, 0, width, height)
 

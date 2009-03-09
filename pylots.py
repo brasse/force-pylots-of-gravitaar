@@ -1,6 +1,7 @@
 import math
 import sys
 from collections import defaultdict
+from optparse import OptionParser
 
 from Box2D import *
 import pyglet
@@ -305,6 +306,11 @@ class SimWindow(pyglet.window.Window):
             self.sim.ship.turn_direction = 0
         
 def main():
+    parser = OptionParser()
+    parser.add_option('-l', '--log', dest='log_file', metavar='FILE', 
+                      help='Write log to FILE.')
+    options, args = parser.parse_args()
+
     window = SimWindow()
     pyglet.app.run()
 

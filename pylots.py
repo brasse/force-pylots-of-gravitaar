@@ -1,4 +1,7 @@
+from __future__ import with_statement
+
 import math
+import pickle
 import sys
 from collections import defaultdict
 from optparse import OptionParser
@@ -77,14 +80,14 @@ class Ship(object):
         self.body.SetAngularVelocity(self.turn_speed * self.turn_direction)
 
 class Sim(object):
-    def __init__(self, game_end_callback):
-        self.game_end = game_end_callback
+    def __init__(self):
         self.time_step = 1.0 / 60.0
         self.total_time = 0.0
         self.thrust = False
         self.turn_direction = 0
         self.collectibles = set()
         self.remove_body_list = set()
+        self.game_over = False
 
         worldAABB = b2AABB()
         worldAABB.lowerBound.Set(-100, -100)
@@ -119,14 +122,15 @@ class Sim(object):
         bodyDef.angle = angle
         body = self.world.CreateBody(bodyDef)
         shape_def.friction = friction
-        shape_def.density = density 
+        shape_def.density = density
+        if type == 'collectible':
+            self.collectibles.add(body)
+            shape_def.isSensor = True
         body.CreateShape(shape_def)
         body.SetMassFromShapes()
         body.SetUserData(defaultdict(lambda: None,
                                      color=color, type=type))
-        if type == 'collectible':
-            self.collectibles.add(body)
-
+            
     def add_box(self, position, angle=0, extents=(1, 1),
                 density=0.0, friction=0.3, color=(1.0, 1.0, 1.0), type=None):
         shape_def = b2PolygonDef()
@@ -153,7 +157,7 @@ class Sim(object):
         self.collectibles.discard(body)
 
     def ship_death(self):
-        self.game_end(died=True)
+        self.game_over = True
 
     def step(self):
         self.total_time += self.time_step
@@ -163,8 +167,8 @@ class Sim(object):
         for body in self.remove_body_list:
             self.world.DestroyBody(body)
         self.remove_body_list = set()
-        if len(self.collectibles) == 0:
-            self.game_end()
+        if len(self.collectibles) == 0 or self.game_over:
+            pyglet.app.exit()
 
 def draw_world(world):
     def draw_shape(shape):
@@ -221,17 +225,18 @@ class SimWindow(pyglet.window.Window):
     WINDOW_SIDE = 400
     VIEWPORT_HALF_SIDE = 7.5 
  
-    def __init__(self):
+    def __init__(self, log_stream=None, replay_stream=None):
         pyglet.window.Window.__init__(self,
                                       width=self.WINDOW_SIDE,
                                       height=self.WINDOW_SIDE,
                                       caption='sim')
-        self.sim = Sim(self.game_end)
+        self.log_stream = log_stream
+        self.replay_stream = replay_stream
+        self.sim = Sim()
         self.time = 0
         self.camera_position = (7.5, 7.5)
         self.sim.add_box((0, 1), -0.1, (50, 1), color=(0.0, 0.0, 1.0))
-        self.sim.add_box((1.8, 9), extents=(.1, .1), color=(0.0, 1.0, 0.0),
-                         type='collectible')
+        self.sim.add_box((1.8, 9), extents=(.1, .1), color=(0.0, 0.0, 0.0))
         self.sim.add_box((10, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
                          type='collectible')
         self.sim.add_box((11, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
@@ -241,18 +246,10 @@ class SimWindow(pyglet.window.Window):
         self.sim.add_box((2, 16), 0.5, (1, 1), 1, type='terminal')
         self.sim.add_box((2, 4), 0.5, (1, 1), 1, color=(1.0, 0.0, 0.0),
                          type='terminal')
-        self.sim.add_circle((13, 7), density=1, color=(1.0, 1.0, 0.0),
-                            type='collectible')
+        self.sim.add_circle((13, 7), density=1, color=(1.0, 1.0, 0.0))
         self.sim.add_edge((13, 5), (0.0, 1.0, 0.0))
         self.sim.init_ship((7,7))
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
-
-    def game_end(self, died=False):
-        if not died:
-            print self.sim.total_time
-        else:
-            print 'GAME_OVER'
-        sys.exit(0)
 
     def on_resize(self, width, height):
         glViewport(0, 0, width, height)
@@ -261,6 +258,13 @@ class SimWindow(pyglet.window.Window):
         self.time += dt
         while self.time > self.sim.time_step:
             self.time -= self.sim.time_step
+            if self.replay_stream:
+                thrust, turn_direction = pickle.load(self.replay_stream)
+                self.sim.ship.thrust = thrust
+                self.sim.ship.turn_direction = turn_direction
+            if self.log_stream:
+                pickle.dump((self.sim.ship.thrust,
+                             self.sim.ship.turn_direction), self.log_stream)
             self.sim.step()
 
     def update_camera_position(self):
@@ -292,27 +296,60 @@ class SimWindow(pyglet.window.Window):
         draw_world(self.sim.world)
 
     def on_key_press(self, symbol, modifiers):
-        if symbol == pyglet.window.key.UP:
-            self.sim.ship.thrust = True
-        elif symbol == pyglet.window.key.LEFT:
-            self.sim.ship.turn_direction = 1
-        elif symbol == pyglet.window.key.RIGHT:
-            self.sim.ship.turn_direction = -1
+        # If not in replay, respond to ship controls.
+        if not self.replay_stream:
+            if symbol == pyglet.window.key.UP:
+                self.sim.ship.thrust = True
+            elif symbol == pyglet.window.key.LEFT:
+                self.sim.ship.turn_direction = 1
+            elif symbol == pyglet.window.key.RIGHT:
+                self.sim.ship.turn_direction = -1
 
     def on_key_release(self, symbol, modifiers):
-        if symbol == pyglet.window.key.UP:
-            self.sim.ship.thrust = False
-        elif symbol in [pyglet.window.key.LEFT, pyglet.window.key.RIGHT]:
-            self.sim.ship.turn_direction = 0
-        
+        # If not in replay, respond to ship controls.
+        if not self.replay_stream:
+            if symbol == pyglet.window.key.UP:
+                self.sim.ship.thrust = False
+            elif symbol in [pyglet.window.key.LEFT, pyglet.window.key.RIGHT]:
+                self.sim.ship.turn_direction = 0
+
+def replay_game(replay_file):
+    with open(replay_file) as f:
+        window = SimWindow(replay_stream=f)
+        pyglet.app.run()
+    return window
+    
+def log_game(log_file):
+    with open(log_file, 'w') as f:
+        window = SimWindow(log_stream=f)
+        pyglet.app.run()
+    return window
+
+def normal_game():
+    window = SimWindow()
+    pyglet.app.run()
+    return window
+
 def main():
     parser = OptionParser()
     parser.add_option('-l', '--log', dest='log_file', metavar='FILE', 
                       help='Write log to FILE.')
+    parser.add_option('-r', '--replay', dest='replay_file', metavar='FILE', 
+                      help='Replay moves from FILE.')
     options, args = parser.parse_args()
 
-    window = SimWindow()
-    pyglet.app.run()
+    if options.replay_file:
+        window = replay_game(options.replay_file)
+    elif options.log_file:
+        window = log_game(options.log_file)
+    else:
+        window = normal_game()
+
+
+    if window.sim.game_over:
+        print 'GAME OVER'
+    else:
+        print window.sim.total_time
 
 if __name__ == '__main__':
     main()

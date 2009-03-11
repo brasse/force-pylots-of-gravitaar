@@ -1,5 +1,7 @@
 from __future__ import with_statement
 
+from iterable_level_loader import read_level
+
 import math
 import pickle
 import sys
@@ -85,13 +87,13 @@ class Sim(object):
         self.total_time = 0.0
         self.thrust = False
         self.turn_direction = 0
-        self.collectibles = set()
+        self.collectibles = set([1])
         self.remove_body_list = set()
         self.game_over = False
 
         worldAABB = b2AABB()
-        worldAABB.lowerBound.Set(-100, -100)
-        worldAABB.upperBound.Set(100, 100)
+        worldAABB.lowerBound.Set(-400, -400)
+        worldAABB.upperBound.Set(400, 400)
         gravity = b2Vec2(0, -5)
         doSleep = True
         self.world = b2World(worldAABB, gravity, doSleep)
@@ -137,7 +139,21 @@ class Sim(object):
         shape_def.SetAsBox(*extents)
         self.add_object(position, angle, density, friction, shape_def,
                         color, type)
-            
+
+    def add_box2(self, body_data):
+        type, id, label, style, left, lower, width, height = body_data
+        shape_def = b2PolygonDef()
+        shape_def.SetAsBox(width / 2, height / 2)
+        position = (left + width / 2, lower + height / 2)
+        self.add_object(shape_def=shape_def, position=position, density=0)
+
+    def add_polygon2(self, body_data):
+        type, id, label, style, _, vertices = body_data
+        shape_def = b2PolygonDef()
+        shape_def.setVertices(vertices)
+        position = (0, 0)
+        self.add_object(shape_def=shape_def, position=position, density=0)
+
     def add_circle(self, position, angle=0, radius=1, density=0.0,
                    friction=0.3, color=(1.0, 1.0, 1.0), type=None):
         shape_def = b2CircleDef()
@@ -223,32 +239,19 @@ def draw_world(world):
 
 class SimWindow(pyglet.window.Window):
     WINDOW_SIDE = 400
-    VIEWPORT_HALF_SIDE = 7.5 
+    VIEWPORT_HALF_SIDE = 150
  
-    def __init__(self, log_stream=None, replay_stream=None):
+    def __init__(self, sim, log_stream=None, replay_stream=None):
         pyglet.window.Window.__init__(self,
                                       width=self.WINDOW_SIDE,
                                       height=self.WINDOW_SIDE,
                                       caption='sim')
+        self.sim = sim
         self.log_stream = log_stream
         self.replay_stream = replay_stream
-        self.sim = Sim()
         self.time = 0
-        self.camera_position = (7.5, 7.5)
-        self.sim.add_box((0, 1), -0.1, (50, 1), color=(0.0, 0.0, 1.0))
-        self.sim.add_box((1.8, 9), extents=(.1, .1), color=(0.0, 0.0, 0.0))
-        self.sim.add_box((10, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
-                         type='collectible')
-        self.sim.add_box((11, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
-                         type='collectible')
-        self.sim.add_box((16, 1), extents=(.1, .1), color=(0.0, 1.0, 0.0),
-                         type='collectible')
-        self.sim.add_box((2, 16), 0.5, (1, 1), 1, type='terminal')
-        self.sim.add_box((2, 4), 0.5, (1, 1), 1, color=(1.0, 0.0, 0.0),
-                         type='terminal')
-        self.sim.add_circle((13, 7), density=1, color=(1.0, 1.0, 0.0))
-        self.sim.add_edge((13, 5), (0.0, 1.0, 0.0))
-        self.sim.init_ship((7,7))
+        self.camera_position = (self.VIEWPORT_HALF_SIDE,
+                                self.VIEWPORT_HALF_SIDE)
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
 
     def on_resize(self, width, height):
@@ -268,7 +271,7 @@ class SimWindow(pyglet.window.Window):
             self.sim.step()
 
     def update_camera_position(self):
-        MAX_DISTANCE = 2.5
+        MAX_DISTANCE = 50.0
         new_camera = []
         ship = self.sim.ship
         for cam, ship in zip(self.camera_position, ship.position):
@@ -325,10 +328,39 @@ def log_game(log_file):
         pyglet.app.run()
     return window
 
-def normal_game():
-    window = SimWindow()
+def normal_game(sim):
+    window = SimWindow(sim)
     pyglet.app.run()
     return window
+
+def make_sim():
+    sim = Sim()
+    sim.add_box((0, 1), -0.1, (50, 1), color=(0.0, 0.0, 1.0))
+    sim.add_box((1.8, 9), extents=(.1, .1), color=(0.0, 0.0, 0.0))
+    sim.add_box((10, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
+                type='collectible')
+    sim.add_box((11, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
+                type='collectible')
+    sim.add_box((16, 1), extents=(.1, .1), color=(0.0, 1.0, 0.0),
+                type='collectible')
+    sim.add_box((2, 16), 0.5, (1, 1), 1, type='terminal')
+    sim.add_box((2, 4), 0.5, (1, 1), 1, color=(1.0, 0.0, 0.0),
+                type='terminal')
+    sim.add_circle((13, 7), density=1, color=(1.0, 1.0, 0.0))
+    sim.add_edge((13, 5), (0.0, 1.0, 0.0))
+    sim.init_ship((7,7))
+    return sim
+
+def make_sim2(file):
+    header, bodies = read_level(file)
+    sim = Sim()
+    for body in bodies:
+        if body[0] == 'rect':
+            sim.add_box2(body)
+        elif body[0] == 'polygon':
+            sim.add_polygon2(body)
+    sim.init_ship((125, 125))
+    return sim
 
 def main():
     parser = OptionParser()
@@ -338,12 +370,14 @@ def main():
                       help='Replay moves from FILE.')
     options, args = parser.parse_args()
 
+    sim = make_sim2('level0.svg')
+    
     if options.replay_file:
         window = replay_game(options.replay_file)
     elif options.log_file:
         window = log_game(options.log_file)
     else:
-        window = normal_game()
+        window = normal_game(sim)
 
 
     if window.sim.game_over:

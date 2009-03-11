@@ -1,4 +1,6 @@
-from xml.dom import Node
+from __future__ import with_statement
+
+from xml.dom import minidom, Node
 
 UP = object()
 DOWN = object()
@@ -42,11 +44,11 @@ def do_transform(t, ps):
 #http://apike.ca/prog_svg_transform.html
 
 
-def get_body(e):
+def get_body(height, e):
     if e.nodeName == 'rect':
         id, label, sd = shape_common(e)
         x, y, w, h = [float(e.getAttribute(n)) for n in ['x', 'y', 'width', 'height']]
-        return 'rect', id, label, sd, x, y, w, h
+        return 'rect', id, label, sd, x, height - y - h, w, h
     if e.nodeName == 'path':
         if e.getAttribute('sodipodi:type') == 'arc':
             id, label, sd = shape_common(e)
@@ -59,10 +61,11 @@ def get_body(e):
             path = e.getAttribute('d')
             points = [tuple(map(float, e.split(',')))
                       for e in path.split() if len(e) > 1]
+            points = [(x, height - y) for x, y in points[:-1]]
             name = 'polygon' if path.split()[-1] == 'z' else 'path'
             return name, id, label, sd, path, points
 
-def body_iter(es):
+def body_iter(height, es):
     level = 0
     for e in es:
         if e is DOWN:
@@ -74,25 +77,27 @@ def body_iter(es):
                 pass
                 # Update matrix & z-value
             else:
-                b = get_body(e)
+                b = get_body(height, e)
                 if b:
                     yield level, b
 
-def read_level(dom):
+def just_bodies(height, es):
+    return (body for _, body in body_iter(height, es))
+
+def read_level(file):
+    dom = minidom.parse(file)
     i = element_iter(dom)
     svg_node = DOWN
     while svg_node in [UP, DOWN]:
         svg_node = i.next()
     header = dict(width=float(svg_node.getAttribute('width')), 
                   height=float(svg_node.getAttribute('height')))
-    return header, body_iter(i)
+    return header, just_bodies(header['height'], i)
 
 def main(argv):
     import pprint
-    from xml.dom import minidom
-    filename = argv[1]
-    dom = minidom.parse(filename)
-    header, bodies = read_level(dom)
+    with open(argv[1]) as f:
+        header, bodies = read_level(f)
     pprint.pprint(header)
     print
     for b in bodies:

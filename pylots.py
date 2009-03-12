@@ -1,11 +1,13 @@
 from __future__ import with_statement
 
+import misc
 from iterable_level_loader import read_level
 
 import math
 import pickle
 import sys
 from collections import defaultdict
+from contextlib import nested
 from optparse import OptionParser
 
 from Box2D import *
@@ -13,19 +15,14 @@ import pyglet
 from pyglet.gl import *
 
 def parse_hex_color(s):
-    print s
     s = s[1:]
     return tuple(int(s[i:i+2], 16)/255.0 for i in xrange(0, 6, 2))
 
 class ContactListener(b2ContactListener):
     def __init__(self, collectible_callback, ship_death_callback):
         super(ContactListener, self).__init__()
-        self.ship = None
         self.collectible = collectible_callback
         self.ship_death = ship_death_callback
-
-    def ship_in_collision(self, point):
-        return self.ship in [point.shape1.GetBody(), point.shape2.GetBody()]
 
     @staticmethod
     def get_body(body1, body2, type):
@@ -35,8 +32,6 @@ class ContactListener(b2ContactListener):
         return body2
     
     def Add(self, point):
-        if self.ship_in_collision(point):
-            self.ship.GetUserData()['color'] = (1.0, 0.5, 0.5)
         b1 = point.shape1.GetBody()
         b2 = point.shape2.GetBody()
         type_pair = set([b1.GetUserData()['type'],
@@ -47,23 +42,20 @@ class ContactListener(b2ContactListener):
             self.ship_death()
 
     def Persist(self, point):
-        if self.ship_in_collision(point):
-            self.ship.GetUserData()['color'] = (0.1, 0.8, 0.1)
+        pass
 
     def Remove(self, point):
-        if self.ship_in_collision(point):
-            self.ship.GetUserData()['color'] = (0.0, 0.0, 0.0)
+        pass
 
     def Result(self, point):
-        if self.ship_in_collision(point):
-            self.ship.GetUserData()['color'] = (0.6, 0.2, 0.2)
+        pass
 
 class Ship(object):
     def __init__(self, body):
         self.body = body
         self.turn_speed = 2
         local_mass_center_x, _ = body.GetLocalCenter().tuple()
-        self.acceleration_force = (local_mass_center_x, 15000)
+        self.acceleration_force = (local_mass_center_x, 1500)
         self.thrust = False
         self.turn_direction = 0
 
@@ -94,7 +86,7 @@ class Sim(object):
         self.total_time = 0.0
         self.thrust = False
         self.turn_direction = 0
-        self.collectibles = set([1])
+        self.collectibles = set()
         self.remove_body_list = set()
         self.game_over = False
 
@@ -107,7 +99,11 @@ class Sim(object):
         self.contact_listener = ContactListener(self.collect, self.ship_death)
         self.world.SetContactListener(self.contact_listener)
 
-    def add_object2(self, body_data):
+    def set_ship_body(self, body):
+        body.GetUserData()['type'] = 'ship'
+        self.ship = Ship(body)
+
+    def add_object(self, body_data):
         type, id, label, style, geometry = body_data
 
         if type == 'rect':
@@ -139,82 +135,25 @@ class Sim(object):
 
         color = parse_hex_color(style['fill'])
         density = float(label.get('density', '0.0'))
+        collectible = 'collectible' in label
+
 
         bodyDef = b2BodyDef()
         bodyDef.position.Set(*position)
-        #bodyDef.angle = angle
         body = self.world.CreateBody(bodyDef)
-        #shape_def.friction = friction
-        shape_def.density = density
-        if type == 'collectible':
-            self.collectibles.add(body)
+
+        body_type = None
+        if collectible:
+            body_type = 'collectible'
             shape_def.isSensor = True
+            self.collectibles.add(body)
+
+        shape_def.density = density
         body.CreateShape(shape_def)
         body.SetMassFromShapes()
         body.SetUserData(defaultdict(lambda: None,
-                                     color=color, type=type))
+                                     color=color, type=body_type))
         return body
-
-
-    def add_object(self, position, angle=0, density=1, friction=0,
-                   shape_def=None, color=(1.0, 1.0, 1.0), type=None):
-        bodyDef = b2BodyDef()
-        bodyDef.position.Set(*position)
-        bodyDef.angle = angle
-        body = self.world.CreateBody(bodyDef)
-        shape_def.friction = friction
-        shape_def.density = density
-        if type == 'collectible':
-            self.collectibles.add(body)
-            shape_def.isSensor = True
-        body.CreateShape(shape_def)
-        body.SetMassFromShapes()
-        body.SetUserData(defaultdict(lambda: None,
-                                     color=color, type=type))
-        return body
-
-    def add_box(self, position, angle=0, extents=(1, 1),
-                density=0.0, friction=0.3, color=(1.0, 1.0, 1.0), type=None):
-        shape_def = b2PolygonDef()
-        shape_def.SetAsBox(*extents)
-        self.add_object(position, angle, density, friction, shape_def,
-                        color, type)
-
-    def add_box2(self, body_data):
-        type, id, label, style, (left, lower, width, height) = body_data
-        color = parse_hex_color(style['fill'])
-        shape_def = b2PolygonDef()
-        shape_def.SetAsBox(width / 2, height / 2)
-        position = (left + width / 2, lower + height / 2)
-        density = float(label.get('density', '0.0'))
-        self.add_object(shape_def=shape_def, position=position, density=density,
-                        color=color)
-
-    def add_polygon2(self, body_data):
-        type, id, label, style, vertices = body_data
-        color = parse_hex_color(style['fill'])
-        shape_def = b2PolygonDef()
-        shape_def.setVertices(vertices)
-        position = (0, 0)
-        density = float(label.get('density', '0.0'))
-        body = self.add_object(shape_def=shape_def, position=position, 
-                               density=density, color=color)
-        if id == 'ship':
-            self.ship = Ship(body)
-
-    def add_circle(self, position, angle=0, radius=1, density=0.0,
-                   friction=0.3, color=(1.0, 1.0, 1.0), type=None):
-        shape_def = b2CircleDef()
-        shape_def.radius = radius
-        self.add_object(position, angle, density, friction, shape_def,
-                        color, type)
-
-    def add_edge(self, position, color):
-        shape_def = b2EdgeChainDef()
-        vertices = [(1, 0.2), (0, 0), (-1, 0.2)]
-        shape_def.setVertices(vertices)
-        shape_def.isALoop = False
-        self.add_object(position, shape_def=shape_def, color=color)
 
     def collect(self, body):
         self.remove_body_list.add(body)
@@ -298,7 +237,7 @@ class SimWindow(pyglet.window.Window):
         self.log_stream = log_stream
         self.replay_stream = replay_stream
         self.time = 0
-        self.camera_position = (200, 160)
+        self.camera_position = sim.ship.position
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
 
     def on_resize(self, width, height):
@@ -363,48 +302,13 @@ class SimWindow(pyglet.window.Window):
             elif symbol in [pyglet.window.key.LEFT, pyglet.window.key.RIGHT]:
                 self.sim.ship.turn_direction = 0
 
-def replay_game(replay_file):
-    with open(replay_file) as f:
-        window = SimWindow(replay_stream=f)
-        pyglet.app.run()
-    return window
-    
-def log_game(log_file):
-    with open(log_file, 'w') as f:
-        window = SimWindow(log_stream=f)
-        pyglet.app.run()
-    return window
-
-def normal_game(sim):
-    window = SimWindow(sim)
-    pyglet.app.run()
-    return window
-
-def make_sim():
-    sim = Sim()
-    sim.add_box((0, 1), -0.1, (50, 1), color=(0.0, 0.0, 1.0))
-    sim.add_box((1.8, 9), extents=(.1, .1), color=(0.0, 0.0, 0.0))
-    sim.add_box((10, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
-                type='collectible')
-    sim.add_box((11, 11), extents=(.1, .1), color=(0.0, 1.0, 0.0),
-                type='collectible')
-    sim.add_box((16, 1), extents=(.1, .1), color=(0.0, 1.0, 0.0),
-                type='collectible')
-    sim.add_box((2, 16), 0.5, (1, 1), 1, type='terminal')
-    sim.add_box((2, 4), 0.5, (1, 1), 1, color=(1.0, 0.0, 0.0),
-                type='terminal')
-    sim.add_circle((13, 7), density=1, color=(1.0, 1.0, 0.0))
-    sim.add_edge((13, 5), (0.0, 1.0, 0.0))
-    sim.init_ship((7,7))
-    return sim
-
-def make_sim2(file):
+def make_sim(file):
     header, bodies = read_level(file)
     sim = Sim(header['width'], header['height'])
     for body in bodies:
-        added = sim.add_object2(body)
+        added = sim.add_object(body)
         if body[1] == 'ship':
-            sim.ship = Ship(added)
+            sim.set_ship_body(added)
     return sim
 
 def main():
@@ -415,15 +319,12 @@ def main():
                       help='Replay moves from FILE.')
     options, args = parser.parse_args()
 
-    sim = make_sim2('level0.svg')
+    sim = make_sim('level0.svg')
     
-    if options.replay_file:
-        window = replay_game(options.replay_file)
-    elif options.log_file:
-        window = log_game(options.log_file)
-    else:
-        window = normal_game(sim)
-
+    with nested(misc.open(options.log_file, 'w'),
+                misc.open(options.replay_file)) as (log, replay):
+        window = SimWindow(sim, log_stream=log, replay_stream=replay)
+        pyglet.app.run()
 
     if window.sim.game_over:
         print 'GAME OVER'

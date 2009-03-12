@@ -57,13 +57,14 @@ class Ship(object):
     def __init__(self, body):
         self.body = body
         self.turn_speed = 2
-        self.acceleration_force = 15
+        local_mass_center_x, _ = body.GetLocalCenter().tuple()
+        self.acceleration_force = (local_mass_center_x, 15000)
         self.thrust = False
         self.turn_direction = 0
 
     @property
     def position(self):
-        return self.body.GetPosition().tuple()
+        return self.body.GetWorldCenter().tuple()
     
     @property
     def velocity(self):
@@ -75,8 +76,9 @@ class Ship(object):
 
     def apply_thrust(self):
         if self.thrust:
-            f = self.body.GetWorldVector((0, self.acceleration_force))
-            self.body.ApplyForce(f, self.body.GetPosition())
+            f = self.body.GetWorldVector(self.acceleration_force)
+            p = self.body.GetWorldCenter()
+            self.body.ApplyForce(f, p)
 
     def apply_turn(self):
         self.body.SetAngularVelocity(self.turn_speed * self.turn_direction)
@@ -132,7 +134,8 @@ class Sim(object):
         body.SetMassFromShapes()
         body.SetUserData(defaultdict(lambda: None,
                                      color=color, type=type))
-            
+        return body
+
     def add_box(self, position, angle=0, extents=(1, 1),
                 density=0.0, friction=0.3, color=(1.0, 1.0, 1.0), type=None):
         shape_def = b2PolygonDef()
@@ -152,7 +155,10 @@ class Sim(object):
         shape_def = b2PolygonDef()
         shape_def.setVertices(vertices)
         position = (0, 0)
-        self.add_object(shape_def=shape_def, position=position, density=0)
+        body = self.add_object(shape_def=shape_def, position=position, 
+                               density=1)
+        if id == 'ShipId':
+            self.ship = Ship(body)
 
     def add_circle(self, position, angle=0, radius=1, density=0.0,
                    friction=0.3, color=(1.0, 1.0, 1.0), type=None):
@@ -250,8 +256,7 @@ class SimWindow(pyglet.window.Window):
         self.log_stream = log_stream
         self.replay_stream = replay_stream
         self.time = 0
-        self.camera_position = (self.VIEWPORT_HALF_SIDE,
-                                self.VIEWPORT_HALF_SIDE)
+        self.camera_position = (200, 160)
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
 
     def on_resize(self, width, height):
@@ -359,7 +364,7 @@ def make_sim2(file):
             sim.add_box2(body)
         elif body[0] == 'polygon':
             sim.add_polygon2(body)
-    sim.init_ship((125, 125))
+#    sim.init_ship((125, 125))
     return sim
 
 def main():

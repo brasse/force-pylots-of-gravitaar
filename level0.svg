@@ -8,8 +8,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="318.89764"
-   height="212.59842"
+   width="106.3"
+   height="70.866142"
    id="svg2"
    sodipodi:version="0.32"
    inkscape:version="0.46"
@@ -36,11 +36,11 @@
      objecttolerance="10"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4"
-     inkscape:cx="80.17387"
-     inkscape:cy="115.88677"
-     inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:zoom="4.1392594"
+     inkscape:cx="51.851901"
+     inkscape:cy="47.834646"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer2"
      showgrid="true"
      units="mm"
      borderlayer="true"
@@ -53,7 +53,10 @@
        type="xygrid"
        id="grid2472"
        visible="true"
-       enabled="true" />
+       enabled="true"
+       units="mm"
+       spacingx="1mm"
+       spacingy="1mm" />
   </sodipodi:namedview>
   <metadata
      id="metadata7">
@@ -72,51 +75,60 @@
      inkscape:label="Static"
      style="display:inline">
     <rect
-       style="fill:#f70000;fill-opacity:1;stroke:none;stroke-width:1.0629921;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="GroundId"
-       width="308.57144"
-       height="43.57143"
-       x="5.7142859"
-       y="163.3127"
-       inkscape:label="GroundLabel" />
+       style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:2.17518783;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect2387"
+       width="99.49054"
+       height="9.9512606"
+       x="3.3923192"
+       y="57.183979" />
     <rect
-       style="fill:#f70000;fill-opacity:1;stroke:none;stroke-width:1.0629921;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="PlatformId"
-       width="72.85714"
-       height="21.428572"
-       x="172.85715"
-       y="72.598419"
-       inkscape:label="PlatformLabel" />
+       style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect3159"
+       width="17.716536"
+       height="3.5433071"
+       x="70.866142"
+       y="31.889765" />
+    <rect
+       style="fill:#ffff00;fill-opacity:1;stroke:none;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect3169"
+       width="10.629921"
+       height="7.0866141"
+       x="63.779526"
+       y="7.0866146"
+       inkscape:label="density=1" />
+    <path
+       sodipodi:type="arc"
+       style="fill:#ffff00;fill-opacity:1;stroke:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path3173"
+       sodipodi:cx="30.118111"
+       sodipodi:cy="26.574804"
+       sodipodi:rx="1.7716535"
+       sodipodi:ry="1.7716535"
+       d="M 31.889764,26.574804 A 1.7716535,1.7716535 0 1 1 28.346457,26.574804 A 1.7716535,1.7716535 0 1 1 31.889764,26.574804 z"
+       inkscape:label="density=1.0" />
+    <path
+       style="fill:#ffff00;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 67.322835,28.346457 L 74.409449,28.346457 L 67.322835,17.716536 L 63.779528,24.80315 L 67.322835,28.346457 z"
+       id="path3179"
+       inkscape:label="density=1" />
+    <path
+       style="fill:#ff7e00;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:1"
+       d="M 77.952756,28.346457 L 85.03937,28.346457 L 81.496063,17.716536 L 77.952756,28.346457 z"
+       id="ship"
+       inkscape:label="density=1.0" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#ff00cd;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 42.519685,31.889764 L 35.433071,38.976378 L 28.346457,42.519686 L 17.716535,35.433071"
+       id="path3185" />
   </g>
   <g
      inkscape:label="Dynamics"
      inkscape:groupmode="layer"
      id="layer1"
-     style="display:inline">
-    <path
-       sodipodi:type="arc"
-       style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:1.0629921;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="BallId"
-       sodipodi:cx="90"
-       sodipodi:cy="132.59842"
-       sodipodi:rx="10"
-       sodipodi:ry="10"
-       d="M 100,132.59842 A 10,10 0 1 1 80,132.59842 A 10,10 0 1 1 100,132.59842 z"
-       inkscape:label="BallLabel density=10" />
-    <path
-       style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 60,122.59842 L 70,142.59842 L 90,152.59842 L 110,142.59842"
-       id="path2386" />
-  </g>
+     style="display:inline" />
   <g
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="Ships"
-     style="display:inline">
-    <path
-       style="fill:#b3b3b3;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 200,32.598419 L 190,62.598419 L 210,62.598419 L 200,32.598419 z"
-       id="ShipId"
-       inkscape:label="ShipLabel" />
-  </g>
+     style="display:inline" />
 </svg>

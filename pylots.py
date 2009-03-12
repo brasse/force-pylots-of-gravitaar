@@ -12,6 +12,11 @@ from Box2D import *
 import pyglet
 from pyglet.gl import *
 
+def parse_hex_color(s):
+    print s
+    s = s[1:]
+    return tuple(int(s[i:i+2], 16)/255.0 for i in xrange(0, 6, 2))
+
 class ContactListener(b2ContactListener):
     def __init__(self, collectible_callback, ship_death_callback):
         super(ContactListener, self).__init__()
@@ -84,7 +89,7 @@ class Ship(object):
         self.body.SetAngularVelocity(self.turn_speed * self.turn_direction)
 
 class Sim(object):
-    def __init__(self):
+    def __init__(self, width, height):
         self.time_step = 1.0 / 60.0
         self.total_time = 0.0
         self.thrust = False
@@ -94,30 +99,62 @@ class Sim(object):
         self.game_over = False
 
         worldAABB = b2AABB()
-        worldAABB.lowerBound.Set(-400, -400)
-        worldAABB.upperBound.Set(400, 400)
+        worldAABB.lowerBound.Set(0, 0)
+        worldAABB.upperBound.Set(width, height)
         gravity = b2Vec2(0, -5)
         doSleep = True
         self.world = b2World(worldAABB, gravity, doSleep)
         self.contact_listener = ContactListener(self.collect, self.ship_death)
         self.world.SetContactListener(self.contact_listener)
 
-    def init_ship(self, position, angle=0):
+    def add_object2(self, body_data):
+        type, id, label, style, geometry = body_data
+
+        if type == 'rect':
+            (left, lower), (width, height) = geometry
+            shape_def = b2PolygonDef()
+            shape_def.SetAsBox(width / 2, height / 2)
+            position = (left + width / 2, lower + height / 2)
+        elif type == 'polygon':
+            vertices = geometry[:-1] # Remove final point
+            shape_def = b2PolygonDef()
+            shape_def.setVertices(vertices)
+            position = (0, 0)
+        elif type == 'circle':
+            position, (rx, ry) = geometry
+            if rx != ry:
+                raise Exception('Cannot handle ovals')
+            shape_def = b2CircleDef()
+            shape_def.radius = rx
+            shape_def.position = position
+        elif type == 'path':
+            vertices = geometry
+            shape_def = b2EdgeChainDef()
+            shape_def.setVertices(vertices)
+            shape_def.isALoop = False
+            position = (0, 0)
+            style['fill'] = style['stroke']
+        else:
+            return
+
+        color = parse_hex_color(style['fill'])
+        density = float(label.get('density', '0.0'))
+
         bodyDef = b2BodyDef()
         bodyDef.position.Set(*position)
-        bodyDef.angle = angle
-        ship = self.world.CreateBody(bodyDef)
-        shapeDef = b2PolygonDef()
-        shapeDef.density = 1
-        for points in [[(0.0, 0.7), (-0.5, -0.7),  (0.0, -0.5)], 
-                       [(0.0, 0.7), (0.0, -0.5),  (0.5, -0.7)]]:
-            shapeDef.setVertices(points)
-            ship.CreateShape(shapeDef)
-        ship.SetMassFromShapes()
-        ship.SetUserData(defaultdict(lambda: None,
-                                     color=(0.0, 0.0, 0.0), type='ship'))
-        self.contact_listener.ship = ship
-        self.ship = Ship(ship)
+        #bodyDef.angle = angle
+        body = self.world.CreateBody(bodyDef)
+        #shape_def.friction = friction
+        shape_def.density = density
+        if type == 'collectible':
+            self.collectibles.add(body)
+            shape_def.isSensor = True
+        body.CreateShape(shape_def)
+        body.SetMassFromShapes()
+        body.SetUserData(defaultdict(lambda: None,
+                                     color=color, type=type))
+        return body
+
 
     def add_object(self, position, angle=0, density=1, friction=0,
                    shape_def=None, color=(1.0, 1.0, 1.0), type=None):
@@ -144,20 +181,25 @@ class Sim(object):
                         color, type)
 
     def add_box2(self, body_data):
-        type, id, label, style, left, lower, width, height = body_data
+        type, id, label, style, (left, lower, width, height) = body_data
+        color = parse_hex_color(style['fill'])
         shape_def = b2PolygonDef()
         shape_def.SetAsBox(width / 2, height / 2)
         position = (left + width / 2, lower + height / 2)
-        self.add_object(shape_def=shape_def, position=position, density=0)
+        density = float(label.get('density', '0.0'))
+        self.add_object(shape_def=shape_def, position=position, density=density,
+                        color=color)
 
     def add_polygon2(self, body_data):
-        type, id, label, style, _, vertices = body_data
+        type, id, label, style, vertices = body_data
+        color = parse_hex_color(style['fill'])
         shape_def = b2PolygonDef()
         shape_def.setVertices(vertices)
         position = (0, 0)
+        density = float(label.get('density', '0.0'))
         body = self.add_object(shape_def=shape_def, position=position, 
-                               density=1)
-        if id == 'ShipId':
+                               density=density, color=color)
+        if id == 'ship':
             self.ship = Ship(body)
 
     def add_circle(self, position, angle=0, radius=1, density=0.0,
@@ -358,13 +400,11 @@ def make_sim():
 
 def make_sim2(file):
     header, bodies = read_level(file)
-    sim = Sim()
+    sim = Sim(header['width'], header['height'])
     for body in bodies:
-        if body[0] == 'rect':
-            sim.add_box2(body)
-        elif body[0] == 'polygon':
-            sim.add_polygon2(body)
-#    sim.init_ship((125, 125))
+        added = sim.add_object2(body)
+        if body[1] == 'ship':
+            sim.ship = Ship(added)
     return sim
 
 def main():

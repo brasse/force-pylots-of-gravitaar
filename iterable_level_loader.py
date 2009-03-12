@@ -18,13 +18,17 @@ def element_iter(dom):
         if n in [UP, DOWN] or n.nodeType == Node.ELEMENT_NODE:
             yield n
 
-def style_dict(style):
-    return dict(tuple(attr.split(':')) for attr in style.split(';'))
+def str_to_dict(s, pair_sep=';', key_value_sep=':'):
+    def true_tuple(k, v=True):
+        return (k, v)
+    return dict(true_tuple(*attr.split(key_value_sep)) 
+                for attr in s.split(pair_sep))
 
 def shape_common(e):
     id = e.getAttribute('id')
     label = e.getAttribute('inkscape:label')
-    sd = style_dict(e.getAttribute('style'))
+    label = str_to_dict(label, ' ', '=')
+    sd = str_to_dict(e.getAttribute('style'))
     return id, label, sd
 
 def get_transform(e):
@@ -48,22 +52,22 @@ def get_body(height, e):
     if e.nodeName == 'rect':
         id, label, sd = shape_common(e)
         x, y, w, h = [float(e.getAttribute(n)) for n in ['x', 'y', 'width', 'height']]
-        return 'rect', id, label, sd, x, height - y - h, w, h
+        return 'rect', id, label, sd, ((x, height - y - h), (w, h))
     if e.nodeName == 'path':
         if e.getAttribute('sodipodi:type') == 'arc':
             id, label, sd = shape_common(e)
             x, y, rx, ry = [float(e.getAttribute('sodipodi:'+n))
                             for n in ['cx', 'cy', 'rx', 'ry']]
             transform = get_transform(e)
-            return 'circle', id, label, sd, (x, y), (rx, ry), transform
+            return 'circle', id, label, sd, ((x, height-y), (rx, ry))
         else:
             id, label, sd = shape_common(e)
             path = e.getAttribute('d')
             points = [tuple(map(float, e.split(',')))
                       for e in path.split() if len(e) > 1]
-            points = [(x, height - y) for x, y in points[:-1]]
+            points = [(x, height - y) for x, y in points]
             name = 'polygon' if path.split()[-1] == 'z' else 'path'
-            return name, id, label, sd, path, points
+            return name, id, label, sd, points
 
 def body_iter(height, es):
     level = 0

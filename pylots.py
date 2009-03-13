@@ -226,9 +226,8 @@ def draw_world(world):
 
 class SimWindow(pyglet.window.Window):
     WINDOW_SIDE = 400
-    VIEWPORT_HALF_SIDE = 150
  
-    def __init__(self, sim, log_stream=None, replay_stream=None):
+    def __init__(self, sim, viewport, log_stream=None, replay_stream=None):
         pyglet.window.Window.__init__(self,
                                       width=self.WINDOW_SIDE,
                                       height=self.WINDOW_SIDE,
@@ -237,7 +236,10 @@ class SimWindow(pyglet.window.Window):
         self.log_stream = log_stream
         self.replay_stream = replay_stream
         self.time = 0
-        self.camera_position = sim.ship.position
+        #self.camera_position = sim.ship.position
+        (x, y), (w, h) = viewport
+        self.camera_position = (x + w/2, y + h/2)
+        self.viewport_model_height = h
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
 
     def on_resize(self, width, height):
@@ -257,15 +259,15 @@ class SimWindow(pyglet.window.Window):
             self.sim.step()
 
     def update_camera_position(self):
-        MAX_DISTANCE = 50.0
+        max_distance = self.viewport_model_height/6
         new_camera = []
         ship = self.sim.ship
         for cam, ship in zip(self.camera_position, ship.position):
             distance = ship - cam
-            if distance > MAX_DISTANCE:
-                cam += (distance - MAX_DISTANCE)
-            elif distance < -MAX_DISTANCE:
-                cam += (distance + MAX_DISTANCE)
+            if distance > max_distance:
+                cam += (distance - max_distance)
+            elif distance < -max_distance:
+                cam += (distance + max_distance)
             new_camera.append(cam)
         self.camera_position = tuple(new_camera)
         
@@ -273,10 +275,10 @@ class SimWindow(pyglet.window.Window):
         self.update_camera_position()
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        glOrtho(self.camera_position[0] - self.VIEWPORT_HALF_SIDE,
-                self.camera_position[0] + self.VIEWPORT_HALF_SIDE,
-                self.camera_position[1] - self.VIEWPORT_HALF_SIDE,
-                self.camera_position[1] + self.VIEWPORT_HALF_SIDE,
+        glOrtho(self.camera_position[0] - self.viewport_model_height/2,
+                self.camera_position[0] + self.viewport_model_height/2,
+                self.camera_position[1] - self.viewport_model_height/2,
+                self.camera_position[1] + self.viewport_model_height/2,
                 -1.0, 1.0)
         glMatrixMode(GL_MODELVIEW)
 
@@ -306,10 +308,14 @@ def make_sim(file):
     header, bodies = read_level(file)
     sim = Sim(header['width'], header['height'])
     for body in bodies:
-        added = sim.add_object(body)
-        if body[1] == 'ship':
-            sim.set_ship_body(added)
-    return sim
+        body_id = body[1]
+        if body_id == 'viewport':
+            viewport = body[4]
+        else:
+            added = sim.add_object(body)
+            if body_id == 'ship':
+                sim.set_ship_body(added)
+    return sim, viewport
 
 def main():
     parser = OptionParser()
@@ -319,11 +325,12 @@ def main():
                       help='Replay moves from FILE.')
     options, args = parser.parse_args()
 
-    sim = make_sim('level0.svg')
+    sim, viewport = make_sim('level0.svg')
     
     with nested(misc.open(options.log_file, 'w'),
                 misc.open(options.replay_file)) as (log, replay):
-        window = SimWindow(sim, log_stream=log, replay_stream=replay)
+        window = SimWindow(sim, viewport, 
+                           log_stream=log, replay_stream=replay)
         pyglet.app.run()
 
     if window.sim.game_over:

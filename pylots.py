@@ -135,16 +135,20 @@ class Sim(object):
 
         color = parse_hex_color(style['fill'])
         density = float(label.get('density', '0.0'))
-        collectible = 'collectible' in label
 
+        def get_object_type():
+            types = ['collectible', 'terminal']
+            for t in types:
+                if t in label:
+                    return t
+            return None
+        object_type = get_object_type()
 
         bodyDef = b2BodyDef()
         bodyDef.position.Set(*position)
         body = self.world.CreateBody(bodyDef)
 
-        body_type = None
-        if collectible:
-            body_type = 'collectible'
+        if object_type == 'collectible':
             shape_def.isSensor = True
             self.collectibles.add(body)
 
@@ -152,7 +156,7 @@ class Sim(object):
         body.CreateShape(shape_def)
         body.SetMassFromShapes()
         body.SetUserData(defaultdict(lambda: None,
-                                     color=color, type=body_type))
+                                     color=color, type=object_type))
         return body
 
     def collect(self, body):

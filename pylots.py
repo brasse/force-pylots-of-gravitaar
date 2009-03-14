@@ -126,7 +126,10 @@ class Sim(object):
         elif type == 'path':
             vertices = geometry
             shape_def = b2EdgeChainDef()
-            shape_def.setVertices(vertices)
+            if 'flip' in label:
+                shape_def.setVertices(list(reversed(vertices)))
+            else:
+                shape_def.setVertices(vertices)                
             shape_def.isALoop = False
             position = (0, 0)
             style['fill'] = style['stroke']

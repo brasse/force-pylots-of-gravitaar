@@ -36,9 +36,9 @@
      objecttolerance="10"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.5041688"
-     inkscape:cx="85.213875"
-     inkscape:cy="153.86349"
+     inkscape:zoom="15.56814"
+     inkscape:cx="71.129255"
+     inkscape:cy="157.059"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="true"
@@ -49,15 +49,15 @@
      inkscape:window-height="751"
      inkscape:window-x="0"
      inkscape:window-y="22"
-     inkscape:snap-global="false">
+     inkscape:snap-global="true">
     <inkscape:grid
        type="xygrid"
        id="grid2472"
        visible="true"
        enabled="true"
        units="mm"
-       spacingx="1mm"
-       spacingy="1mm" />
+       spacingx="0.2mm"
+       spacingy="0.2mm" />
   </sodipodi:namedview>
   <metadata
      id="metadata7">
@@ -157,6 +157,21 @@
        id="path3164"
        sodipodi:nodetypes="cccccccccccc"
        inkscape:label="terminal" />
+    <g
+       id="combined"
+       inkscape:label="#g3170">
+      <path
+         inkscape:label="#path2394"
+         sodipodi:nodetypes="cccc"
+         id="leftship"
+         d="M 77.952756,44.094488 L 75.11811,51.181102 L 77.952756,50.472441 L 77.952756,44.094488 z"
+         style="fill:#b47b6b;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:1" />
+      <path
+         inkscape:label="#path3168"
+         id="rightship"
+         d="M 77.952756,50.472441 L 80.787402,51.181102 L 77.952756,44.094488 L 77.952756,50.472441 z"
+         style="fill:#b4e56b;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:1" />
+    </g>
   </g>
   <g
      inkscape:label="Dynamics"

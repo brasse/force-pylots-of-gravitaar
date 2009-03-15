@@ -47,8 +47,8 @@
      inkscape:showpageshadow="true"
      inkscape:window-width="1280"
      inkscape:window-height="751"
-     inkscape:window-x="0"
-     inkscape:window-y="22"
+     inkscape:window-x="22"
+     inkscape:window-y="29"
      inkscape:snap-global="true">
     <inkscape:grid
        type="xygrid"
@@ -159,15 +159,15 @@
        inkscape:label="terminal" />
     <g
        id="combined"
-       inkscape:label="#g3170">
+       inkscape:label="multishape">
       <path
-         inkscape:label="#path2394"
+         inkscape:label="density=1.0"
          sodipodi:nodetypes="cccc"
          id="leftship"
          d="M 77.952756,44.094488 L 75.11811,51.181102 L 77.952756,50.472441 L 77.952756,44.094488 z"
          style="fill:#b47b6b;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:1" />
       <path
-         inkscape:label="#path3168"
+         inkscape:label="density=1.0"
          id="rightship"
          d="M 77.952756,50.472441 L 80.787402,51.181102 L 77.952756,44.094488 L 77.952756,50.472441 z"
          style="fill:#b4e56b;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:1" />

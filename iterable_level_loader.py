@@ -24,10 +24,20 @@ def str_to_dict(s, pair_sep=';', key_value_sep=':'):
     return dict(true_tuple(*attr.split(key_value_sep)) 
                 for attr in s.split(pair_sep))
 
-def shape_common(e):
-    id = e.getAttribute('id')
+def label_dict(e):
     label = e.getAttribute('inkscape:label')
     label = str_to_dict(label, ' ', '=')
+    return label
+
+def element_common(e):
+    id = e.getAttribute('id')
+    label = label_dict(e)
+    return id, label
+
+def shape_common(e):
+    #id = e.getAttribute('id')
+    #label = label_dict(e)
+    id, label = element_common(e)
     sd = str_to_dict(e.getAttribute('style'))
     return id, label, sd
 
@@ -47,6 +57,8 @@ def do_transform(t, ps):
 #http://www.w3.org/TR/SVG/coords.html
 #http://apike.ca/prog_svg_transform.html
 
+
+MULTISHAPE = object()
 
 def get_body(height, e):
     if e.nodeName == 'rect':
@@ -70,23 +82,47 @@ def get_body(height, e):
             return name, id, label, sd, points
 
 def body_iter(height, es):
-    level = 0
+    #level = 0
     for e in es:
-        if e is DOWN:
-            level += 1
-        elif e is UP:
-            level -= 1
+        if e in [UP, DOWN]:
+            yield e
         else:
             if e.nodeName == 'g':
-                pass
-                # Update matrix & z-value
+                if 'multishape' in label_dict(e):
+                    id, label = element_common(e)
+                    yield MULTISHAPE, id, label
+                    # Update matrix & z-value
             else:
                 b = get_body(height, e)
                 if b:
-                    yield level, b
+                    yield b
 
 def just_bodies(height, es):
-    return (body for _, body in body_iter(height, es))
+    #return (body for body in body_iter(height, es))
+    bi = body_iter(height, es)
+    for body in bi:
+        if body in [UP, DOWN]:
+            pass
+        elif body[0] == MULTISHAPE:
+            _, id, label = body
+            subs = []
+            level = 0
+            while True:
+                e = bi.next()
+                if e is DOWN:
+                    level += 1
+                elif e is UP:
+                    level -= 1
+                    if level == 0:
+                        break
+                else:
+                    type, id, label, sd, geometry = e
+                    # Is this a good thing? id and label is lost!
+                    subs.append((type, sd, geometry))
+            yield id, label, subs
+        else:
+            type, id, label, sd, geometry = body
+            yield id, label, [(type, sd, geometry)]
 
 def read_level(file):
     dom = minidom.parse(file)

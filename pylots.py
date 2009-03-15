@@ -105,14 +105,13 @@ class Sim(object):
         body.GetUserData()['type'] = 'ship'
         self.ship = Ship(body)
 
-    def add_object(self, body_data):
-        type, id, label, style, geometry = body_data
-
+    def add_shape(self, body, shape_data, label, object_type):
+        type, style, geometry = shape_data
         if type == 'rect':
             (left, lower), (width, height) = geometry
             shape_def = b2PolygonDef()
-            shape_def.SetAsBox(width / 2, height / 2)
             position = (left + width / 2, lower + height / 2)
+            shape_def.SetAsBox(width / 2, height / 2, position, 0)
         elif type == 'polygon':
             vertices = geometry[:-1] # Remove final point
             shape_def = b2PolygonDef()
@@ -143,6 +142,22 @@ class Sim(object):
             return None
         density = float(label.get('density', '0.0'))
 
+
+        if object_type == 'collectible':
+            shape_def.isSensor = True
+
+        shape_def.density = density
+        body.CreateShape(shape_def)
+        return color
+
+    def add_object(self, body_data):
+        #type, id, label, style, geometry = body_data
+        id, label, shapes = body_data
+
+        bodyDef = b2BodyDef()
+        #bodyDef.position.Set(*position)
+        body = self.world.CreateBody(bodyDef)
+
         def get_object_type():
             types = ['collectible', 'terminal']
             for t in types:
@@ -151,19 +166,14 @@ class Sim(object):
             return None
         object_type = get_object_type()
 
-        bodyDef = b2BodyDef()
-        bodyDef.position.Set(*position)
-        body = self.world.CreateBody(bodyDef)
+        for shape in shapes:
+            color = self.add_shape(body, shape, label, object_type)
 
-        if object_type == 'collectible':
-            shape_def.isSensor = True
-            self.collectibles.add(body)
-
-        shape_def.density = density
-        body.CreateShape(shape_def)
         body.SetMassFromShapes()
         body.SetUserData(defaultdict(lambda: None,
                                      color=color, type=object_type))
+        if object_type == 'collectible':
+            self.collectibles.add(body)
         return body
 
     def collect(self, body):
@@ -230,9 +240,10 @@ def draw_world(world):
         glTranslatef(x, y, 0.0)
         glRotatef(math.degrees(angle), 0.0, 0.0, 1.0)
         color = body_data['color'] if body_data else (1.0, 1.0, 1.0)
-        glColor3f(*color)
-        for shape in body:
-            draw_shape(shape)
+        if color:
+            glColor3f(*color)
+            for shape in body:
+                draw_shape(shape)
         glPopMatrix()
 
 class SimWindow(pyglet.window.Window):
@@ -319,12 +330,13 @@ def make_sim(file):
     header, bodies = read_level(file)
     sim = Sim(header['width'], header['height'])
     for body in bodies:
-        body_id = body[1]
+        body_id = body[0]
         added = sim.add_object(body)
         if body_id == 'ship':
             sim.set_ship_body(added)
         if body_id == 'viewport':
-            viewport = body[4]
+            print body
+            viewport = body[2][0][2]
     return sim, viewport
 
 def main():

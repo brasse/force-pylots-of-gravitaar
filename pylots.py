@@ -15,6 +15,8 @@ import pyglet
 from pyglet.gl import *
 
 def parse_hex_color(s):
+    if s == 'none':
+        return None
     s = s[1:]
     return tuple(int(s[i:i+2], 16)/255.0 for i in xrange(0, 6, 2))
 
@@ -131,9 +133,11 @@ class Sim(object):
             position = (0, 0)
             style['fill'] = style['stroke']
         else:
-            return
+            return None
 
         color = parse_hex_color(style['fill'])
+        if not color:
+            return None
         density = float(label.get('density', '0.0'))
 
         def get_object_type():
@@ -313,12 +317,11 @@ def make_sim(file):
     sim = Sim(header['width'], header['height'])
     for body in bodies:
         body_id = body[1]
+        added = sim.add_object(body)
+        if body_id == 'ship':
+            sim.set_ship_body(added)
         if body_id == 'viewport':
             viewport = body[4]
-        else:
-            added = sim.add_object(body)
-            if body_id == 'ship':
-                sim.set_ship_body(added)
     return sim, viewport
 
 def main():

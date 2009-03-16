@@ -21,10 +21,13 @@ def parse_hex_color(s):
     return tuple(int(s[i:i+2], 16)/255.0 for i in xrange(0, 6, 2))
 
 class ContactListener(b2ContactListener):
-    def __init__(self, collectible_callback, ship_death_callback):
+    def __init__(self, collectible_callback, ship_death_callback,
+                 signal_callback):
         super(ContactListener, self).__init__()
         self.collectible = collectible_callback
         self.ship_death = ship_death_callback
+        self.signal = signal_callback
+        self.ship = None
 
     @staticmethod
     def get_body(body1, body2, type):
@@ -32,7 +35,15 @@ class ContactListener(b2ContactListener):
             return body1
         assert(body2.GetUserData()['type'] == type)
         return body2
-    
+
+    def get_ship_collider(self, body1, body2):
+        if body1 == self.ship:
+            return body2
+        elif body2 == self.ship:
+            return body1
+        else:
+            return None
+        
     def Add(self, point):
         b1 = point.shape1.GetBody()
         b2 = point.shape2.GetBody()
@@ -42,6 +53,14 @@ class ContactListener(b2ContactListener):
             self.collectible(self.get_body(b1, b2, 'collectible'))
         elif type_pair == set(['ship', 'terminal']):
             self.ship_death()
+
+        # Signals
+        c = self.get_ship_collider(b1, b2)
+        if c:
+            data = c.GetUserData()
+            signal = data['triggers']
+            if signal:
+                self.signal(signal)
 
     def Persist(self, point):
         pass
@@ -90,6 +109,7 @@ class Sim(object):
         self.turn_direction = 0
         self.collectibles = set()
         self.remove_body_list = set()
+        self.signal_listeners = defaultdict(list)
         self.game_over = False
 
         worldAABB = b2AABB()
@@ -98,12 +118,14 @@ class Sim(object):
         gravity = b2Vec2(0, -5)
         doSleep = True
         self.world = b2World(worldAABB, gravity, doSleep)
-        self.contact_listener = ContactListener(self.collect, self.ship_death)
+        self.contact_listener = ContactListener(self.collect, self.ship_death,
+                                                self.signal)
         self.world.SetContactListener(self.contact_listener)
 
     def set_ship_body(self, body):
         body.GetUserData()['type'] = 'ship'
         self.ship = Ship(body)
+        self.contact_listener.ship = body
 
     def add_shape(self, body, shape_data, object_type):
         type, id, label, style, geometry = shape_data
@@ -148,6 +170,21 @@ class Sim(object):
         body.CreateShape(shape_def)
         return color
 
+    def signal(self, signal):
+        self.emitted_signals.add(signal)
+
+    def set_up_listeners(self, body, label):
+        slots = ['destroyed_by']
+        for slot in slots:
+            if slot in label:
+                self.signal_listeners[label[slot]].append((slot, body))
+
+    def handle_emitted_signals(self):
+        for signal in self.emitted_signals:
+            for action, listener in self.signal_listeners[signal]:
+                if action == 'destroyed_by':
+                    self.world.DestroyBody(listener)
+                    
     def add_object(self, body_data):
         #type, id, label, style, geometry = body_data
         id, label, shapes = body_data
@@ -168,9 +205,14 @@ class Sim(object):
             self.add_shape(body, shape, object_type)
 
         body.SetMassFromShapes()
-        body.SetUserData(defaultdict(lambda: None, id=id, type=object_type))
+        body.SetUserData(defaultdict(lambda: None, id=id,
+                                     type=get_object_type(),
+                                     triggers=label.get('triggers', None)))
         if object_type == 'collectible':
             self.collectibles.add(body)
+
+        self.set_up_listeners(body, label)
+        
         return body
 
     def collect(self, body):
@@ -183,8 +225,10 @@ class Sim(object):
     def step(self):
         self.total_time += self.time_step
         self.ship.apply_controls()
+        self.emitted_signals = set()
         vel_iters, pos_iters = 10, 8
         self.world.Step(self.time_step, vel_iters, pos_iters)
+#        self.handle_emitted_signals()
         for body in self.remove_body_list:
             self.world.DestroyBody(body)
         self.remove_body_list = set()

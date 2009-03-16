@@ -47,8 +47,8 @@
      inkscape:showpageshadow="true"
      inkscape:window-width="1280"
      inkscape:window-height="751"
-     inkscape:window-x="253"
-     inkscape:window-y="125"
+     inkscape:window-x="0"
+     inkscape:window-y="22"
      inkscape:snap-global="false">
     <inkscape:grid
        type="xygrid"
@@ -96,7 +96,7 @@
        height="7.0866141"
        x="63.779526"
        y="7.0866146"
-       inkscape:label="density=1" />
+       inkscape:label="density=1 triggers=foo" />
     <path
        sodipodi:type="arc"
        style="fill:#ffff00;fill-opacity:1;stroke:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
@@ -111,7 +111,7 @@
        style="fill:#ffff00;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 67.322835,28.346457 L 74.409449,28.346457 L 67.322835,17.716536 L 63.779528,24.80315 L 67.322835,28.346457 z"
        id="path3179"
-       inkscape:label="density=1 terminal" />
+       inkscape:label="density=1 terminal destroyed_by=foo" />
     <path
        style="fill:#ff7e00;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 51.099345,48.136426 L 56.244999,48.136426 L 53.672172,40.193989 L 51.099345,48.136426 z"

@@ -1,5 +1,7 @@
 from __future__ import with_statement
 
+from svg_path_linearize import linearize_path
+
 from xml.dom import minidom, Node
 
 UP = object()
@@ -22,7 +24,7 @@ def str_to_dict(s, pair_sep=';', key_value_sep=':'):
     def true_tuple(k, v=True):
         return (k, v)
     return dict(true_tuple(*attr.split(key_value_sep)) 
-                for attr in s.split(pair_sep))
+                for attr in s.split(pair_sep) if attr != '')
 
 def label_dict(e):
     label = e.getAttribute('inkscape:label')
@@ -75,6 +77,7 @@ def get_body(height, e):
         else:
             id, label, sd = shape_common(e)
             path = e.getAttribute('d')
+            path = linearize_path(path)
             points = [tuple(map(float, e.split(',')))
                       for e in path.split() if len(e) > 1]
             points = [(x, height - y) for x, y in points]
@@ -105,7 +108,7 @@ def just_bodies(height, es):
             pass
         elif body[0] == MULTISHAPE:
             _, id, label = body
-            subs = []
+            subshapes = []
             level = 0
             while True:
                 e = bi.next()
@@ -116,13 +119,13 @@ def just_bodies(height, es):
                     if level == 0:
                         break
                 else:
-                    type, id, label, sd, geometry = e
+                    type, sub_id, sub_label, sd, geometry = e
                     # Is this a good thing? id and label is lost!
-                    subs.append((type, sd, geometry))
-            yield id, label, subs
+                    subshapes.append((type, sub_id, sub_label, sd, geometry))
+            yield id, label, subshapes
         else:
             type, id, label, sd, geometry = body
-            yield id, label, [(type, sd, geometry)]
+            yield id, label, [(type, id, label, sd, geometry)]
 
 def read_level(file):
     dom = minidom.parse(file)

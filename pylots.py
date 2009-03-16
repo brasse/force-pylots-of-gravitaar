@@ -105,8 +105,8 @@ class Sim(object):
         body.GetUserData()['type'] = 'ship'
         self.ship = Ship(body)
 
-    def add_shape(self, body, shape_data, label, object_type):
-        type, style, geometry = shape_data
+    def add_shape(self, body, shape_data, object_type):
+        type, id, label, style, geometry = shape_data
         if type == 'rect':
             (left, lower), (width, height) = geometry
             shape_def = b2PolygonDef()
@@ -116,14 +116,13 @@ class Sim(object):
             vertices = geometry[:-1] # Remove final point
             shape_def = b2PolygonDef()
             shape_def.setVertices(vertices)
-            position = (0, 0)
         elif type == 'circle':
             position, (rx, ry) = geometry
             if rx != ry:
                 raise Exception('Cannot handle ovals')
             shape_def = b2CircleDef()
             shape_def.radius = rx
-            shape_def.position = position
+            shape_def.localPosition = position
         elif type == 'path':
             vertices = geometry
             shape_def = b2EdgeChainDef()
@@ -132,7 +131,6 @@ class Sim(object):
             else:
                 shape_def.setVertices(vertices)                
             shape_def.isALoop = False
-            position = (0, 0)
             style['fill'] = style['stroke']
         else:
             return None
@@ -142,11 +140,11 @@ class Sim(object):
             return None
         density = float(label.get('density', '0.0'))
 
-
         if object_type == 'collectible':
             shape_def.isSensor = True
 
         shape_def.density = density
+        shape_def.SetUserData(dict(color=color))
         body.CreateShape(shape_def)
         return color
 
@@ -167,11 +165,10 @@ class Sim(object):
         object_type = get_object_type()
 
         for shape in shapes:
-            color = self.add_shape(body, shape, label, object_type)
+            self.add_shape(body, shape, object_type)
 
         body.SetMassFromShapes()
-        body.SetUserData(defaultdict(lambda: None,
-                                     color=color, type=object_type))
+        body.SetUserData(defaultdict(lambda: None, id=id, type=object_type))
         if object_type == 'collectible':
             self.collectibles.add(body)
         return body
@@ -198,6 +195,8 @@ def draw_world(world):
     def draw_shape(shape):
         def draw_circle(shape):
             circle = shape.asCircle()
+            x, y = circle.GetLocalPosition().tuple()
+            glTranslatef(x, y, 0.0)
             glBegin(GL_TRIANGLE_FAN)
             steps = 100
             radius = circle.GetRadius()
@@ -215,13 +214,10 @@ def draw_world(world):
             glEnd()
 
         def draw_edge(shape):
-            # An edge chain that is a loop will cause this code to hang.
             edge = shape.asEdge()
             glBegin(GL_LINES)
-            while edge:
-                glVertex2f(*edge.GetVertex1().tuple())
-                glVertex2f(*edge.GetVertex2().tuple())
-                edge = edge.GetNextEdge()
+            glVertex2f(*edge.GetVertex1().tuple())
+            glVertex2f(*edge.GetVertex2().tuple())
             glEnd()
 
         draw_function = \
@@ -239,11 +235,10 @@ def draw_world(world):
         glPushMatrix()
         glTranslatef(x, y, 0.0)
         glRotatef(math.degrees(angle), 0.0, 0.0, 1.0)
-        color = body_data['color'] if body_data else (1.0, 1.0, 1.0)
-        if color:
+        for shape in body:
+            color = shape.GetUserData()['color']
             glColor3f(*color)
-            for shape in body:
-                draw_shape(shape)
+            draw_shape(shape)
         glPopMatrix()
 
 class SimWindow(pyglet.window.Window):
@@ -258,7 +253,6 @@ class SimWindow(pyglet.window.Window):
         self.log_stream = log_stream
         self.replay_stream = replay_stream
         self.time = 0
-        #self.camera_position = sim.ship.position
         (x, y), (w, h) = viewport
         self.camera_position = (x + w/2, y + h/2)
         self.viewport_model_height = h
@@ -331,12 +325,13 @@ def make_sim(file):
     sim = Sim(header['width'], header['height'])
     for body in bodies:
         body_id = body[0]
-        added = sim.add_object(body)
-        if body_id == 'ship':
-            sim.set_ship_body(added)
         if body_id == 'viewport':
             print body
-            viewport = body[2][0][2]
+            viewport = body[2][0][4]
+        else:
+            added = sim.add_object(body)
+            if body_id == 'ship':
+                sim.set_ship_body(added)
     return sim, viewport
 
 def main():

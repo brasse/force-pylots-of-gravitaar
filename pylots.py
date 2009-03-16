@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 import misc
-from iterable_level_loader import read_level
+from level_loader import read_level
 
 import math
 import pickle

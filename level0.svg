@@ -36,9 +36,9 @@
      objecttolerance="10"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="33.415111"
-     inkscape:cx="75.325203"
-     inkscape:cy="159.5632"
+     inkscape:zoom="11.814026"
+     inkscape:cx="59.468206"
+     inkscape:cy="171.56188"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="true"
@@ -46,7 +46,7 @@
      borderlayer="true"
      inkscape:showpageshadow="true"
      inkscape:window-width="1280"
-     inkscape:window-height="667"
+     inkscape:window-height="883"
      inkscape:window-x="27"
      inkscape:window-y="4"
      inkscape:snap-global="true">
@@ -88,7 +88,8 @@
        width="17.716536"
        height="3.5433071"
        x="70.866142"
-       y="31.889765" />
+       y="31.889765"
+       inkscape:label="triggers=bar" />
     <rect
        style="fill:#ffff00;fill-opacity:1;stroke:none;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect3169"
@@ -195,6 +196,16 @@
        id="path3172"
        sodipodi:nodetypes="cccc"
        inkscape:label="density=0.2" />
+    <path
+       sodipodi:type="arc"
+       style="fill:#f46600;fill-opacity:1;stroke:none;stroke-opacity:1"
+       id="path3178"
+       sodipodi:cx="88.937004"
+       sodipodi:cy="25.31496"
+       sodipodi:rx="1.0629921"
+       sodipodi:ry="1.0629921"
+       d="M 89.999996,25.31496 A 1.0629921,1.0629921 0 1 1 87.874012,25.31496 A 1.0629921,1.0629921 0 1 1 89.999996,25.31496 z"
+       inkscape:label="created_by=bar density=0.5" />
   </g>
   <g
      inkscape:label="Dynamics"

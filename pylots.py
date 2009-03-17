@@ -3,6 +3,7 @@ from __future__ import with_statement
 import misc
 from level_loader import read_level
 
+import copy
 import math
 import pickle
 import sys
@@ -174,24 +175,36 @@ class Sim(object):
         self.emitted_signals.add(signal)
 
     def set_up_listeners(self, body, label):
-        slots = ['destroyed_by']
+        slots = ['destroyed_by', 'created_by']
         for slot in slots:
             if slot in label:
                 self.signal_listeners[label[slot]].append((slot, body))
 
     def handle_emitted_signals(self):
         for signal in self.emitted_signals:
-            for action, listener in self.signal_listeners[signal]:
+            list_copy = copy.copy(self.signal_listeners[signal])
+            for i, (action, listener) in enumerate(list_copy):
                 if action == 'destroyed_by':
+                    del self.signal_listeners[signal][i]
                     self.world.DestroyBody(listener)
-                    
+                if action == 'created_by':
+                    del self.signal_listeners[signal][i]
+                    label = listener[1]
+                    del label['created_by']
+                    self.add_object(listener)
+
     def add_object(self, body_data):
-        #type, id, label, style, geometry = body_data
         id, label, shapes = body_data
 
+        if 'created_by' in label:
+            # This body should not created now. It will be created when
+            # its creation signal is emitted.
+            self.set_up_listeners(body_data, label)
+            return None
+
         bodyDef = b2BodyDef()
-        #bodyDef.position.Set(*position)
         body = self.world.CreateBody(bodyDef)
+        self.set_up_listeners(body, label)
 
         def get_object_type():
             types = ['collectible', 'terminal']
@@ -210,8 +223,6 @@ class Sim(object):
                                      triggers=label.get('triggers', None)))
         if object_type == 'collectible':
             self.collectibles.add(body)
-
-        self.set_up_listeners(body, label)
         
         return body
 
@@ -228,7 +239,7 @@ class Sim(object):
         self.emitted_signals = set()
         vel_iters, pos_iters = 10, 8
         self.world.Step(self.time_step, vel_iters, pos_iters)
-#        self.handle_emitted_signals()
+        self.handle_emitted_signals()
         for body in self.remove_body_list:
             self.world.DestroyBody(body)
         self.remove_body_list = set()

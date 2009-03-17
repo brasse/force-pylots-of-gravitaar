@@ -15,7 +15,8 @@
    inkscape:version="0.46"
    version="1.0"
    sodipodi:docname="falling_down.svg"
-   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   winning_condition="collect">
   <defs
      id="defs2405">
     <inkscape:perspective
@@ -33,16 +34,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.2851282"
-     inkscape:cx="93.08111"
-     inkscape:cy="112.08832"
+     inkscape:zoom="3.3310522"
+     inkscape:cx="87.282451"
+     inkscape:cy="69.107827"
      inkscape:current-layer="layer1"
      id="namedview2407"
      showgrid="false"
      inkscape:window-width="640"
-     inkscape:window-height="931"
-     inkscape:window-x="870"
-     inkscape:window-y="46" />
+     inkscape:window-height="785"
+     inkscape:window-x="110"
+     inkscape:window-y="0" />
   <metadata
      id="metadata2409">
     <rdf:RDF>
@@ -128,7 +129,7 @@
        y="229.93782"
        inkscape:label="triggers=trapdoor1" />
     <rect
-       style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:0.35433071999999999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="trapdoor1"
        width="13.252881"
        height="3.4359322"
@@ -158,7 +159,7 @@
        height="3.5433071"
        x="116.1072"
        y="140.87837"
-       inkscape:label="collectible " />
+       inkscape:label="triggers=collect" />
     <rect
        style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect3289"

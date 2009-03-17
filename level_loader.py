@@ -130,6 +130,10 @@ def just_bodies(height, es):
             type, id, label, sd, geometry = body
             yield id, label, [(type, id, label, sd, geometry)]
 
+def get_winning_condition(node):
+    wc_attr = node.getAttribute('winning_condition')
+    return [signal.strip() for signal in wc_attr.split(',') if signal != '']
+    
 def read_level(file):
     dom = minidom.parse(file)
     i = element_iter(dom)
@@ -137,7 +141,8 @@ def read_level(file):
     while svg_node in [UP, DOWN]:
         svg_node = i.next()
     header = dict(width=float(svg_node.getAttribute('width')), 
-                  height=float(svg_node.getAttribute('height')))
+                  height=float(svg_node.getAttribute('height')),
+                  winning_condition=get_winning_condition(svg_node))
     return header, just_bodies(header['height'], i)
 
 def main(argv):

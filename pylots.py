@@ -22,20 +22,12 @@ def parse_hex_color(s):
     return tuple(int(s[i:i+2], 16)/255.0 for i in xrange(0, 6, 2))
 
 class ContactListener(b2ContactListener):
-    def __init__(self, collectible_callback, ship_death_callback,
+    def __init__(self, ship_death_callback,
                  signal_callback):
         super(ContactListener, self).__init__()
-        self.collectible = collectible_callback
         self.ship_death = ship_death_callback
         self.signal = signal_callback
         self.ship = None
-
-    @staticmethod
-    def get_body(body1, body2, type):
-        if body1.GetUserData()['type'] == type:
-            return body1
-        assert(body2.GetUserData()['type'] == type)
-        return body2
 
     def get_ship_collider(self, body1, body2):
         if body1 == self.ship:
@@ -50,9 +42,7 @@ class ContactListener(b2ContactListener):
         b2 = point.shape2.GetBody()
         type_pair = set([b1.GetUserData()['type'],
                          b2.GetUserData()['type']])
-        if type_pair == set(['ship', 'collectible']):
-            self.collectible(self.get_body(b1, b2, 'collectible'))
-        elif type_pair == set(['ship', 'terminal']):
+        if type_pair == set(['ship', 'terminal']):
             self.ship_death()
 
         # Signals
@@ -103,13 +93,13 @@ class Ship(object):
         self.body.SetAngularVelocity(self.turn_speed * self.turn_direction)
 
 class Sim(object):
-    def __init__(self, width, height):
+    def __init__(self, width, height, winning_condition):
+        self.winning_condition = winning_condition
         self.time_step = 1.0 / 60.0
         self.total_time = 0.0
         self.thrust = False
         self.turn_direction = 0
-        self.collectibles = set()
-        self.remove_body_list = set()
+        self.accumulated_signals = set()
         self.signal_listeners = defaultdict(list)
         self.game_over = False
 
@@ -119,8 +109,7 @@ class Sim(object):
         gravity = b2Vec2(0, -5)
         doSleep = True
         self.world = b2World(worldAABB, gravity, doSleep)
-        self.contact_listener = ContactListener(self.collect, self.ship_death,
-                                                self.signal)
+        self.contact_listener = ContactListener(self.ship_death, self.signal)
         self.world.SetContactListener(self.contact_listener)
 
     def set_ship_body(self, body):
@@ -161,19 +150,24 @@ class Sim(object):
         color = parse_hex_color(style['fill'])
         if not color:
             return None
-        density = float(label.get('density', '0.0'))
 
-        if object_type == 'collectible':
-            shape_def.isSensor = True
+#        if object_type == 'collectible':
+#            shape_def.isSensor = True
 
-        shape_def.density = density
+        shape_def.density = float(label.get('density', shape_def.density))
+        shape_def.friction = float(label.get('friction', shape_def.friction))
+        shape_def.restitution = float(label.get('restitution',
+                                                shape_def.restitution))
+        if 'sensor' in label:
+            shape_def.isSensor = True            
         shape_def.SetUserData(dict(color=color))
         body.CreateShape(shape_def)
         return color
 
     def signal(self, signal):
         self.emitted_signals.add(signal)
-
+        self.accumulated_signals.add(signal)
+        
     def set_up_listeners(self, body, label):
         slots = ['destroyed_by', 'created_by']
         for slot in slots:
@@ -193,6 +187,10 @@ class Sim(object):
                     del label['created_by']
                     self.add_object(listener)
 
+    def check_winning_condition(self):
+        if self.winning_condition.issubset(self.accumulated_signals):
+            pyglet.app.exit()
+
     def add_object(self, body_data):
         id, label, shapes = body_data
 
@@ -207,7 +205,7 @@ class Sim(object):
         self.set_up_listeners(body, label)
 
         def get_object_type():
-            types = ['collectible', 'terminal']
+            types = ['terminal']
             for t in types:
                 if t in label:
                     return t
@@ -221,14 +219,9 @@ class Sim(object):
         body.SetUserData(defaultdict(lambda: None, id=id,
                                      type=get_object_type(),
                                      triggers=label.get('triggers', None)))
-        if object_type == 'collectible':
-            self.collectibles.add(body)
         
         return body
 
-    def collect(self, body):
-        self.remove_body_list.add(body)
-        self.collectibles.discard(body)
 
     def ship_death(self):
         self.game_over = True
@@ -240,12 +233,10 @@ class Sim(object):
         vel_iters, pos_iters = 10, 8
         self.world.Step(self.time_step, vel_iters, pos_iters)
         self.handle_emitted_signals()
-        for body in self.remove_body_list:
-            self.world.DestroyBody(body)
-        self.remove_body_list = set()
-        if len(self.collectibles) == 0 or self.game_over:
+        if self.game_over:
             pyglet.app.exit()
-
+        self.check_winning_condition()
+        
 def draw_world(world):
     def draw_shape(shape):
         def draw_circle(shape):
@@ -377,7 +368,8 @@ class SimWindow(pyglet.window.Window):
 
 def make_sim(file):
     header, bodies = read_level(file)
-    sim = Sim(header['width'], header['height'])
+    sim = Sim(header['width'], header['height'],
+              set(header['winning_condition']))
     for body in bodies:
         body_id = body[0]
         if body_id == 'viewport':

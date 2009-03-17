@@ -80,9 +80,7 @@ def get_body(height, e):
             path = linearize_path(path)
             # Make sure that closed paths are defined clockwise
             if path.split()[-1] == 'z' and path_area(path) > 0.0:
-                print path_area(path)
                 path = reverse_path(path)
-                print path_area(path)
             points = [tuple(map(float, e.split(',')))
                       for e in path.split() if len(e) > 1]
             points = [(x, height - y) for x, y in points]

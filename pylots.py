@@ -381,8 +381,12 @@ def make_sim(file):
     for body in bodies:
         body_id = body[0]
         if body_id == 'viewport':
-            print body
             viewport = body[2][0][4]
+        elif body_id == 'gravity':
+            (p1x, p1y), (p2x, p2y) = body[2][0][4]
+            x, y = p2x-p1x, p2y-p1y
+
+            sim.world.SetGravity(b2Vec2(x, y))
         else:
             added = sim.add_object(body)
             if body_id == 'ship':
@@ -397,7 +401,9 @@ def main():
                       help='Replay moves from FILE.')
     options, args = parser.parse_args()
 
-    sim, viewport = make_sim('level0.svg')
+    if len(args) < 1:
+        parser.error('Level file name must be given. ')
+    sim, viewport = make_sim(args[0])
     
     with nested(misc.open(options.log_file, 'w'),
                 misc.open(options.replay_file)) as (log, replay):

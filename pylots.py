@@ -43,6 +43,12 @@ class ContactListener(b2ContactListener):
         c = self.get_ship_collider(b1, b2)
         if c:
             data = c.GetUserData()
+            signal = data['ship_triggers']
+            if signal:
+                self.signal(signal)
+
+        for b in [b1, b2]:
+            data = b.GetUserData()
             signal = data['triggers']
             if signal:
                 self.signal(signal)
@@ -207,7 +213,9 @@ class Sim(object):
 
         body.SetMassFromShapes()
         body.SetUserData(defaultdict(lambda: None, id=id,
-                                     triggers=label.get('triggers', None)))
+                                     triggers=label.get('triggers', None),
+                                     ship_triggers=label.get('ship_triggers',
+                                                             None)))
         
         return body
 

@@ -38,8 +38,8 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="11.814026"
-     inkscape:cx="59.468206"
-     inkscape:cy="166.11302"
+     inkscape:cx="55.157861"
+     inkscape:cy="168.85126"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="true"
@@ -48,8 +48,8 @@
      inkscape:showpageshadow="true"
      inkscape:window-width="1280"
      inkscape:window-height="785"
-     inkscape:window-x="66"
-     inkscape:window-y="66"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:snap-global="true">
     <inkscape:grid
        type="xygrid"
@@ -90,7 +90,7 @@
        height="3.5433071"
        x="70.866142"
        y="31.889765"
-       inkscape:label="triggers=bar" />
+       inkscape:label="ship_triggers=bar" />
     <rect
        style="fill:#ffff00;fill-opacity:1;stroke:none;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect3169"
@@ -98,7 +98,7 @@
        height="7.0866141"
        x="63.779526"
        y="7.0866146"
-       inkscape:label="density=1 triggers=foo" />
+       inkscape:label="density=1 ship_triggers=foo" />
     <path
        sodipodi:type="arc"
        style="fill:#ffff00;fill-opacity:1;stroke:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
@@ -113,12 +113,12 @@
        style="fill:#ffff00;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 67.322835,28.346457 L 74.409449,28.346457 L 67.322835,17.716536 L 63.779528,24.80315 L 67.322835,28.346457 z"
        id="path3179"
-       inkscape:label="density=1 triggers=game_over destroyed_by=foo" />
+       inkscape:label="density=1 ship_triggers=game_over destroyed_by=foo" />
     <path
        style="fill:#ff7e00;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 51.099345,48.136426 L 56.244999,48.136426 L 53.672172,40.193989 L 51.099345,48.136426 z"
        id="shipx"
-       inkscape:label="density=1.0" />
+       inkscape:label="density=1.0 destroyed_by=foo" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#ff00cd;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 42.519685,31.889764 L 35.433071,38.976378 L 28.346457,42.519686 L 17.716535,35.433071"
@@ -130,7 +130,7 @@
        height="3.5433071"
        x="53.149605"
        y="72.440948"
-       inkscape:label="triggers=collect3 destroyed_by=collect3" />
+       inkscape:label="ship_triggers=collect3 destroyed_by=collect3" />
     <rect
        style="fill:#c85647;fill-opacity:1"
        id="rect3163"
@@ -138,7 +138,7 @@
        height="3.5433071"
        x="67.322838"
        y="75.984253"
-       inkscape:label="triggers=collect2 destroyed_by=collect2" />
+       inkscape:label="ship_triggers=collect2 destroyed_by=collect2" />
     <rect
        style="fill:none;fill-opacity:1;stroke:#ff0000;stroke-width:0.3991932;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="viewport"
@@ -152,7 +152,7 @@
        d="M 46.284439,67.268174 L 48.225399,81.153505 L 56.692913,83.070866 L 67.322835,90.15748 L 81.496063,93.700787 L 94.434849,93.143573 L 102.75591,100.7874 L 124.01575,104.33071 L 134.64567,100.7874 L 144.27046,94.487315 L 155.90551,90.15748 L 166.53543,75.984252 L 166.53543,61.811024 L 152.3622,44.094488 L 142.03089,39.575344 L 124.01575,38.162307 L 106.29921,37.007874 L 106.46476,22.498176 L 111.37013,15.775999 L 100.83266,-2.0286879"
        id="path2392"
        sodipodi:nodetypes="ccccccccccccccscc"
-       inkscape:label="triggers=game_over flip" />
+       inkscape:label="ship_triggers=game_over flip" />
     <g
        id="ship"
        inkscape:label="multishape">
@@ -181,7 +181,7 @@
        style="fill:none;fill-rule:evenodd;stroke:#ec00d3;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 79.454378,67.435533 C 79.454378,67.435533 95.682461,76.919478 102.21584,80.291547 C 108.74923,83.663616 107.06319,76.07646 113.80733,72.704391 C 120.55147,69.332322 125.60957,85.981913 133.82899,80.713055 C 142.04841,75.444197 138.46559,67.014025 134.88276,60.902149 C 131.29994,54.790274 119.70845,58.583852 113.80733,58.373097 C 107.90621,58.162343 108.32772,51.207451 102.4266,51.418205 C 96.525478,51.628959 92.099638,57.108572 92.099638,57.108572"
        id="path3189"
-       inkscape:label="triggers=game_over" />
+       inkscape:label="ship_triggers=game_over" />
     <path
        style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:none;fill-opacity:1;stroke:#ec00d3;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial"
        d="M 38.641651,15.698244 L 38.641651,15.698244 C 38.270554,14.532889 38.085007,13.588879 38.085011,12.866213 C 38.085007,12.208672 38.324265,11.647149 38.802784,11.181643 C 39.281295,10.716161 39.88188,10.483413 40.604542,10.4834 C 41.281619,10.483413 41.862673,10.708023 42.347706,11.157228 C 42.832724,11.606459 43.124065,12.221693 43.221729,13.002932 L 44.969776,12.73926 C 44.793985,11.567397 44.323608,10.657567 43.558643,10.009768 C 42.793661,9.3619953 41.821983,9.0381024 40.643604,9.0380878 C 39.497766,9.0381024 38.521205,9.3408365 37.713917,9.946291 C 36.711311,10.708023 36.210009,11.765964 36.210011,13.120119 C 36.210009,13.43914 36.239306,13.766288 36.297901,14.101564 C 36.356493,14.43686 36.493212,14.969086 36.708057,15.698244 L 35.204151,15.698244 L 35.204151,17.143557 L 37.118214,17.143557 C 37.228888,17.553719 37.284227,17.957364 37.284229,18.354494 C 37.284227,19.278978 37.066128,20.061854 36.629932,20.703127 C 36.193733,21.344405 35.663135,21.837569 35.038136,22.182619 L 35.711964,23.872072 C 36.14816,23.592124 36.631558,23.37077 37.162159,23.20801 C 37.692755,23.04525 38.192429,22.96387 38.661182,22.963869 C 38.967168,22.96387 39.273157,22.989911 39.579151,23.041994 C 39.774459,23.081057 40.205773,23.203127 40.873096,23.408205 C 41.540407,23.613283 41.961956,23.732098 42.137745,23.76465 C 42.417685,23.816733 42.694378,23.842775 42.967823,23.842775 C 43.293335,23.842775 43.620483,23.803713 43.949268,23.725588 C 44.278035,23.647463 44.741902,23.481447 45.34087,23.227541 L 44.774464,21.616213 C 44.006225,21.980798 43.381226,22.163089 42.899464,22.163088 C 42.502321,22.163089 41.743858,22.029626 40.624073,21.762697 C 39.946985,21.599939 39.338261,21.518559 38.797901,21.518557 C 38.37472,21.518559 37.905971,21.590173 37.391651,21.7334 C 38.010138,21.075851 38.454473,20.43132 38.724659,19.799807 C 38.994837,19.168301 39.129928,18.569343 39.129932,18.002932 C 39.129928,17.716479 39.068079,17.430021 38.944386,17.143557 L 41.717823,17.143557 L 41.717823,15.698244 L 38.641651,15.698244"
@@ -206,7 +206,7 @@
        sodipodi:rx="1.0629921"
        sodipodi:ry="1.0629921"
        d="M 89.999996,25.31496 A 1.0629921,1.0629921 0 1 1 87.874012,25.31496 A 1.0629921,1.0629921 0 1 1 89.999996,25.31496 z"
-       inkscape:label="created_by=bar density=0.5" />
+       inkscape:label="created_by=bar triggers=baz density=0.5 restitution=0.5" />
     <rect
        style="fill:#b4e56b;fill-opacity:1;stroke:none;stroke-opacity:1"
        id="rect2403"
@@ -214,7 +214,17 @@
        height="3.5433071"
        x="88.58268"
        y="40.551182"
-       inkscape:label="triggers=collect1 destroyed_by=collect1 sensor" />
+       inkscape:label="ship_triggers=collect1 destroyed_by=collect1 sensor" />
+    <path
+       sodipodi:type="arc"
+       style="fill:#1925f5;fill-opacity:1;stroke:none;stroke-opacity:1"
+       id="path2404"
+       sodipodi:cx="88.937004"
+       sodipodi:cy="20.35433"
+       sodipodi:rx="1.0629921"
+       sodipodi:ry="1.0629921"
+       d="M 89.999996,20.35433 A 1.0629921,1.0629921 0 1 1 87.874012,20.35433 A 1.0629921,1.0629921 0 1 1 89.999996,20.35433 z"
+       inkscape:label="created_by=baz density=1 restitution=0.5" />
   </g>
   <g
      inkscape:label="Dynamics"

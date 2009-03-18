@@ -105,7 +105,6 @@ class Sim(object):
         self.accumulated_signals = set()
         self.signal_listeners = defaultdict(list)
         self.game_end_status = None
-#        self.game_over = False
 
         worldAABB = b2AABB()
         worldAABB.lowerBound.Set(0, 0)
@@ -195,7 +194,6 @@ class Sim(object):
     def check_game_end_condition(self):
         if 'game_over' in self.accumulated_signals:
             self.game_end_status = self.GAME_OVER
-#            self.game_over = True
             pyglet.app.exit()
         elif self.winning_condition.issubset(self.accumulated_signals):
             self.game_end_status = self.LEVEL_COMPLETED
@@ -309,7 +307,11 @@ class SimWindow(pyglet.window.Window):
         while self.time > self.sim.time_step:
             self.time -= self.sim.time_step
             if self.replay_stream:
-                thrust, turn_direction = pickle.load(self.replay_stream)
+                try:
+                    thrust, turn_direction = pickle.load(self.replay_stream)
+                except EOFError:
+                    pyglet.app.exit()
+                    break
                 self.sim.ship.thrust = thrust
                 self.sim.ship.turn_direction = turn_direction
             if self.log_stream:
@@ -382,27 +384,46 @@ def make_sim(file):
                 sim.set_ship_body(added)
     return sim, viewport
 
+def headless(sim, replay_stream):
+    try:
+        while not sim.game_end_status:
+            thrust, turn_direction = pickle.load(replay_stream)
+            sim.ship.thrust = thrust
+            sim.ship.turn_direction = turn_direction
+            sim.step()
+    except EOFError:
+        pass
+
 def main():
     parser = OptionParser()
     parser.add_option('-l', '--log', dest='log_file', metavar='FILE', 
                       help='Write log to FILE.')
     parser.add_option('-r', '--replay', dest='replay_file', metavar='FILE', 
                       help='Replay moves from FILE.')
+    parser.add_option('-H', '--headless', dest='headless', action='store_true',
+                      help='Replay without displaying graphics.')
     options, args = parser.parse_args()
+
+    if options.headless and not options.replay_file:
+        parser.error('Headless simulation requires a replay file.')
 
     if len(args) < 1:
         parser.error('Level file name must be given. ')
     sim, viewport = make_sim(args[0])
-    
-    with nested(misc.open(options.log_file, 'w'),
-                misc.open(options.replay_file)) as (log, replay):
-        window = SimWindow(sim, viewport, 
-                           log_stream=log, replay_stream=replay)
-        pyglet.app.run()
 
-    if window.sim.game_end_status == Sim.LEVEL_COMPLETED:
-        print window.sim.total_time
-    elif window.sim.game_end_status == Sim.GAME_OVER:
+    if options.headless:
+        with open(options.replay_file) as f:
+            headless(sim, f)
+    else:
+        with nested(misc.open(options.log_file, 'w'),
+                    misc.open(options.replay_file)) as (log, replay):
+            window = SimWindow(sim, viewport, 
+                               log_stream=log, replay_stream=replay)
+            pyglet.app.run()
+
+    if sim.game_end_status == Sim.LEVEL_COMPLETED:
+        print sim.total_time
+    elif sim.game_end_status == Sim.GAME_OVER:
         print 'GAME OVER'
     else:
         print 'ABORTED'

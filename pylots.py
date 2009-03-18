@@ -93,6 +93,9 @@ class Ship(object):
         self.body.SetAngularVelocity(self.turn_speed * self.turn_direction)
 
 class Sim(object):
+    GAME_OVER = object()
+    LEVEL_COMPLETED = object()
+
     def __init__(self, width, height, winning_condition):
         self.winning_condition = winning_condition
         self.time_step = 1.0 / 60.0
@@ -101,7 +104,8 @@ class Sim(object):
         self.turn_direction = 0
         self.accumulated_signals = set()
         self.signal_listeners = defaultdict(list)
-        self.game_over = False
+        self.game_end_status = None
+#        self.game_over = False
 
         worldAABB = b2AABB()
         worldAABB.lowerBound.Set(0, 0)
@@ -190,9 +194,11 @@ class Sim(object):
 
     def check_game_end_condition(self):
         if 'game_over' in self.accumulated_signals:
-            self.game_over = True
+            self.game_end_status = self.GAME_OVER
+#            self.game_over = True
             pyglet.app.exit()
         elif self.winning_condition.issubset(self.accumulated_signals):
+            self.game_end_status = self.LEVEL_COMPLETED
             pyglet.app.exit()
 
     def add_object(self, body_data):
@@ -394,10 +400,12 @@ def main():
                            log_stream=log, replay_stream=replay)
         pyglet.app.run()
 
-    if window.sim.game_over:
+    if window.sim.game_end_status == Sim.LEVEL_COMPLETED:
+        print window.sim.total_time
+    elif window.sim.game_end_status == Sim.GAME_OVER:
         print 'GAME OVER'
     else:
-        print window.sim.total_time
+        print 'ABORTED'
 
 if __name__ == '__main__':
     main()

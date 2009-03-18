@@ -167,17 +167,20 @@ class Sim(object):
     def handle_emitted_signals(self):
         for signal in self.emitted_signals:
             list_copy = copy.copy(self.signal_listeners[signal])
+            to_be_removed = []
             for i, (action, listener) in enumerate(list_copy):
                 if action == 'destroyed_by':
-                    del self.signal_listeners[signal][i]
+                    to_be_removed.append(i)
                     self.world.DestroyBody(listener)
-                if action == 'created_by':
-                    del self.signal_listeners[signal][i]
+                elif action == 'created_by':
+                    to_be_removed.append(i)
                     label = listener[1]
                     # If we do not remove the created_by attribute from label,
                     # this object will not be creted by add_object().
                     del label['created_by']
                     self.add_object(listener)
+            for i in reversed(to_be_removed):
+                del self.signal_listeners[signal][i]
 
     def check_game_end_condition(self):
         if 'game_over' in self.accumulated_signals:

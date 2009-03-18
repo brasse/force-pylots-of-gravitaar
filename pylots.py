@@ -22,10 +22,8 @@ def parse_hex_color(s):
     return tuple(int(s[i:i+2], 16)/255.0 for i in xrange(0, 6, 2))
 
 class ContactListener(b2ContactListener):
-    def __init__(self, ship_death_callback,
-                 signal_callback):
+    def __init__(self, signal_callback):
         super(ContactListener, self).__init__()
-        self.ship_death = ship_death_callback
         self.signal = signal_callback
         self.ship = None
 
@@ -40,10 +38,6 @@ class ContactListener(b2ContactListener):
     def Add(self, point):
         b1 = point.shape1.GetBody()
         b2 = point.shape2.GetBody()
-        type_pair = set([b1.GetUserData()['type'],
-                         b2.GetUserData()['type']])
-        if type_pair == set(['ship', 'terminal']):
-            self.ship_death()
 
         # Signals
         c = self.get_ship_collider(b1, b2)
@@ -109,15 +103,14 @@ class Sim(object):
         gravity = b2Vec2(0, -5)
         doSleep = True
         self.world = b2World(worldAABB, gravity, doSleep)
-        self.contact_listener = ContactListener(self.ship_death, self.signal)
+        self.contact_listener = ContactListener(self.signal)
         self.world.SetContactListener(self.contact_listener)
 
     def set_ship_body(self, body):
-        body.GetUserData()['type'] = 'ship'
         self.ship = Ship(body)
         self.contact_listener.ship = body
 
-    def add_shape(self, body, shape_data, object_type):
+    def add_shape(self, body, shape_data):
         type, id, label, style, geometry = shape_data
         if type == 'rect':
             (left, lower), (width, height) = geometry
@@ -151,9 +144,6 @@ class Sim(object):
         if not color:
             return None
 
-#        if object_type == 'collectible':
-#            shape_def.isSensor = True
-
         shape_def.density = float(label.get('density', shape_def.density))
         shape_def.friction = float(label.get('friction', shape_def.friction))
         shape_def.restitution = float(label.get('restitution',
@@ -184,11 +174,16 @@ class Sim(object):
                 if action == 'created_by':
                     del self.signal_listeners[signal][i]
                     label = listener[1]
+                    # If we do not remove the created_by attribute from label,
+                    # this object will not be creted by add_object().
                     del label['created_by']
                     self.add_object(listener)
 
-    def check_winning_condition(self):
-        if self.winning_condition.issubset(self.accumulated_signals):
+    def check_game_end_condition(self):
+        if 'game_over' in self.accumulated_signals:
+            self.game_over = True
+            pyglet.app.exit()
+        elif self.winning_condition.issubset(self.accumulated_signals):
             pyglet.app.exit()
 
     def add_object(self, body_data):
@@ -204,27 +199,14 @@ class Sim(object):
         body = self.world.CreateBody(bodyDef)
         self.set_up_listeners(body, label)
 
-        def get_object_type():
-            types = ['terminal']
-            for t in types:
-                if t in label:
-                    return t
-            return None
-        object_type = get_object_type()
-
         for shape in shapes:
-            self.add_shape(body, shape, object_type)
+            self.add_shape(body, shape)
 
         body.SetMassFromShapes()
         body.SetUserData(defaultdict(lambda: None, id=id,
-                                     type=get_object_type(),
                                      triggers=label.get('triggers', None)))
         
         return body
-
-
-    def ship_death(self):
-        self.game_over = True
 
     def step(self):
         self.total_time += self.time_step
@@ -233,9 +215,7 @@ class Sim(object):
         vel_iters, pos_iters = 10, 8
         self.world.Step(self.time_step, vel_iters, pos_iters)
         self.handle_emitted_signals()
-        if self.game_over:
-            pyglet.app.exit()
-        self.check_winning_condition()
+        self.check_game_end_condition()
         
 def draw_world(world):
     def draw_shape(shape):

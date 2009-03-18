@@ -214,7 +214,7 @@
        height="3.5433071"
        x="88.58268"
        y="40.551182"
-       inkscape:label="triggers=collect1 destroyed_by=collect1" />
+       inkscape:label="triggers=collect1 destroyed_by=collect1 sensor" />
   </g>
   <g
      inkscape:label="Dynamics"

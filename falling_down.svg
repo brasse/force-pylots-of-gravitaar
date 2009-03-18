@@ -61,7 +61,7 @@
      id="layer1">
     <g
        id="ship"
-       inkscape:label="multishape">
+       inkscape:label="multishape restitution=0.5">
       <path
          inkscape:label="density=1.0"
          sodipodi:nodetypes="cccc"
@@ -90,12 +90,12 @@
        inkscape:label="" />
     <rect
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"
-       id="rect3159"
+       id="asdf"
        width="17.716536"
        height="3.5433071"
        x="21.917698"
        y="237.86401"
-       inkscape:label="triggers=bar" />
+       inkscape:label="triggers=bar restitution=0.5 " />
     <rect
        style="fill:#c85647;fill-opacity:1;display:inline"
        id="rect3163"
@@ -119,7 +119,7 @@
        height="3.5433071"
        x="116.52258"
        y="150.97408"
-       inkscape:label="density=1.0 triggers=trapdoor4" />
+       inkscape:label="density=5.0 triggers=trapdoor4" />
     <rect
        style="fill:#d900ff;fill-opacity:1;stroke:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="trigger"
@@ -159,7 +159,7 @@
        height="3.5433071"
        x="116.1072"
        y="140.87837"
-       inkscape:label="triggers=collect" />
+       inkscape:label="triggers=collect " />
     <rect
        style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect3289"
@@ -170,9 +170,10 @@
        inkscape:label="destroyed_by=trapdoor4" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 10.065081,168.11809 C 43.323608,178.18317 58.202423,191.74915 63.45377,163.30435 C 68.705116,134.85956 68.267504,127.42015 72.206014,144.48703 C 76.144523,161.55391 83.146319,167.24286 83.146319,167.24286 C 83.146319,167.24286 90.148114,171.61899 90.148114,156.30256 C 90.148114,140.98613 92.336175,138.36046 97.149909,144.92464 C 101.96364,151.48882 96.712297,168.99331 100.21319,165.49241 C 103.71409,161.99152 109.40305,169.86854 110.27828,161.99152 C 111.1535,154.1145 109.40305,136.1724 112.02872,131.35866 C 114.6544,126.54493 128.22038,124.35687 125.15709,136.1724 C 122.0938,147.98793 120.78097,159.36584 122.53142,163.30435 C 124.28187,167.24286 146.60009,180.37123 156.66517,182.12168 C 166.73025,183.87213 158.85323,201.37662 149.22576,223.25723 C 139.59829,245.13784 147.47531,253.01486 147.47531,253.01486"
+       d="M 10.065081,168.11809 C 43.323608,178.18317 58.202423,191.74915 63.45377,163.30435 C 68.705116,134.85956 68.267504,127.42015 72.206014,144.48703 C 76.144523,161.55391 83.146319,167.24286 83.146319,167.24286 C 83.146319,167.24286 90.148114,171.61899 90.148114,156.30256 C 90.148114,140.98613 92.336175,138.36046 97.149909,144.92464 C 101.96364,151.48882 95.785666,163.27665 100.21319,165.49241 C 105.21512,167.99563 109.40305,169.86854 110.27828,161.99152 C 111.1535,154.1145 109.40305,136.1724 112.02872,131.35866 C 114.6544,126.54493 128.22038,124.35687 125.15709,136.1724 C 122.0938,147.98793 120.78097,159.36584 122.53142,163.30435 C 124.28187,167.24286 146.60009,180.37123 156.66517,182.12168 C 166.73025,183.87213 158.85323,201.37662 149.22576,223.25723 C 139.59829,245.13784 147.47531,253.01486 147.47531,253.01486"
        id="path3311"
-       inkscape:label="triggers=game_over" />
+       inkscape:label="triggers=game_over"
+       sodipodi:nodetypes="csscsssssssssc" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#fda000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 139.16068,245.13783 L 119.90574,238.13604 L 123.84425,256.95336 L 115.09201,258.70381 L 112.90395,238.57365 L 96.712297,237.26081 L 98.462746,255.20291 L 91.460951,255.64053 L 91.460951,237.26081 L 73.956463,237.69843 L 74.831687,256.07814 L 67.829892,257.82859 L 67.829892,237.69843 L 53.826301,247.32589"

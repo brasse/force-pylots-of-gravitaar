@@ -3,7 +3,6 @@ from __future__ import with_statement
 import misc
 from level_loader import read_level
 
-import copy
 import math
 import pickle
 import sys
@@ -99,7 +98,7 @@ class Sim(object):
     def __init__(self, width, height, winning_condition):
         self.winning_condition = winning_condition
         self.time_step = 1.0 / 60.0
-        self.total_time = 0.0
+        self.steps_taken = 0
         self.thrust = False
         self.turn_direction = 0
         self.accumulated_signals = set()
@@ -175,21 +174,19 @@ class Sim(object):
 
     def handle_emitted_signals(self):
         for signal in self.emitted_signals:
-            list_copy = copy.copy(self.signal_listeners[signal])
-            to_be_removed = []
-            for i, (action, listener) in enumerate(list_copy):
+            listener_list = self.signal_listeners[signal]
+            for e in listener_list[:]:
+                action, listener = e
                 if action == 'destroyed_by':
-                    to_be_removed.append(i)
+                    listener_list.remove(e)
                     self.world.DestroyBody(listener)
                 elif action == 'created_by':
-                    to_be_removed.append(i)
                     label = listener[1]
                     # If we do not remove the created_by attribute from label,
                     # this object will not be creted by add_object().
                     del label['created_by']
+                    listener_list.remove(e)
                     self.add_object(listener)
-            for i in reversed(to_be_removed):
-                del self.signal_listeners[signal][i]
 
     def check_game_end_condition(self):
         if 'game_over' in self.accumulated_signals:
@@ -224,7 +221,7 @@ class Sim(object):
         return body
 
     def step(self):
-        self.total_time += self.time_step
+        self.steps_taken += 1
         self.ship.apply_controls()
         self.emitted_signals = set()
         vel_iters, pos_iters = 10, 8
@@ -422,7 +419,7 @@ def main():
             pyglet.app.run()
 
     if sim.game_end_status == Sim.LEVEL_COMPLETED:
-        print sim.total_time
+        print sim.steps_taken
     elif sim.game_end_status == Sim.GAME_OVER:
         print 'GAME OVER'
     else:

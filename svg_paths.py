@@ -6,7 +6,25 @@ def main():
     path = 'M 23.128643,300.00104 L 74.827962,315.64688 C 74.827962,315.64688 79.589741,238.77816 103.39864,277.55265 C 127.20754,316.32714 127.88779,357.14239 157.81897,274.15138'
     path = 'M 469.3754,192.52087 L 519.03396,139.46104 C 519.03396,139.46104 575.49506,120.41392 567.33201,182.99731 C 559.16895,245.5807 488.42252,244.90044 488.42252,244.90044 L 455.09006,228.57434 C 455.09006,228.57434 463.25311,220.41129 469.3754,192.52087 z'
     path = 'M 92.099638,57.108572 C 92.099638,57.108572 96.525478,51.628959 102.4266,51.418205 C 108.32772,51.207451 107.90621,58.162343 113.80733,58.373097 C 119.70845,58.583852 131.29994,54.790274 134.88276,60.902149 C 138.46559,67.014025 142.04841,75.444197 133.82899,80.713055 C 125.60957,85.981913 120.55147,69.332322 113.80733,72.704391 C 107.06319,76.07646 108.74923,83.663616 102.21584,80.291547 C 95.682461,76.919478 79.454378,67.435533 79.454378,67.435533'
-    print linearize_path(path)
+    #print linearize_path(path)
+
+    # Polygon to triangulate
+    path = 'M 193.47779,368.65544 L 278.70015,486.1241 L 439.93164,352.53229 L 541.27715,437.75465 L 690.99211,258.0967 L 511.33416,299.55623 L 359.3159,156.75119 L 345.49605,366.35213 L 241.84724,350.22898 L 255.66708,198.21072 L 193.47779,368.65544'
+    print triangulate_path(path)
+
+def point_in_triangle(p1, p2, p3, p):
+    for a, b in [(p1, p2), (p2, p3), (p3, p1)]:
+        if polygon_area(a, b, p) > 0:
+            return False
+
+    return True
+
+def triangulate_path(path):
+    points = path_points(path)
+    print points
+    print path_area(path)
+    print polygon_area(points)
+    return path
 
 def linearize_path(path):
     """
@@ -84,6 +102,11 @@ def bezier_points(p, steps = 10):
     p = [SimpleVector(*t) for t in p]
     return ((p.x, p.y) for p in bezier_iter(p, steps))
 
+def path_points(path):
+    points = [tuple(map(float, e.split(',')))
+              for e in path.split() if len(e) > 1]
+    return points
+
 def get_path(path):
     regex = re.compile('([MLCz])([-\d., ]*)')
     return ((match.group(1),
@@ -109,10 +132,21 @@ def reverse_path(path):
         new_path.append('z')
     return ' '.join(new_path)
 
+def polygon_area(points):
+    n = len(points)
+    a = 0
+    for i in xrange(n):
+        j = (i + 1) % n
+        x, y = points[i]
+        nx, ny = points[j]
+        a += x * ny - nx * y
+    return a / 2.0
 
 def path_area(path):
     """
     http://local.wasp.uwa.edu.au/~pbourke/geometry/clockwise/
+    """
+    return polygon_area(path_points(path))
     """
     a = 0
     for type, cs in get_path(path):
@@ -129,6 +163,7 @@ def path_area(path):
         else:
             assert False
     return a / 2.0
+    """
 
 
 if __name__ == '__main__':

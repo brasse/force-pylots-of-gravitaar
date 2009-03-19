@@ -1,6 +1,6 @@
 from __future__ import with_statement
 
-from svg_paths import linearize_path, path_area, reverse_path
+from svg_paths import linearize_path, path_area, reverse_path, path_points
 
 from xml.dom import minidom, Node
 
@@ -81,8 +81,9 @@ def get_body(height, e):
             # Make sure that closed paths are defined clockwise
             if path.split()[-1] == 'z' and path_area(path) > 0.0:
                 path = reverse_path(path)
-            points = [tuple(map(float, e.split(',')))
-                      for e in path.split() if len(e) > 1]
+            points = path_points(path)
+            #points = [tuple(map(float, e.split(',')))
+                      #for e in path.split() if len(e) > 1]
             points = [(x, height - y) for x, y in points]
             name = 'polygon' if path.split()[-1] == 'z' else 'path'
             return name, id, label, sd, points

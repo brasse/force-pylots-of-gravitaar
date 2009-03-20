@@ -315,12 +315,12 @@ class SimWindow(pyglet.window.Window):
     GHOST_COLOR_DAMPING = 0.4
     
     def __init__(self, sim, viewport, log_stream=None, replay_stream=None,
-                 ghost_sim=None, ghost_stream=None):
+                 ghost_sim=None, ghost_stream=None, caption='sim'):
         pyglet.window.Window.__init__(self,
                                       width=self.WINDOW_SIDE,
                                       height=self.WINDOW_SIDE,
                                       resizable=True,
-                                      caption='sim')
+                                      caption=caption)
         self.sim = sim
         self.log_stream = log_stream
         self.replay_stream = replay_stream
@@ -466,7 +466,9 @@ def main():
     if len(args) < 1:
         parser.error('Level file name must be given. ')
 
-    sim, viewport = make_sim(args[0])
+    level_file_name = args[0]
+
+    sim, viewport = make_sim(level_file_name)
     ghost_sim = None
     if (options.ghost_file):
         ghost_sim, _ = make_sim(args[0], is_ghost=True)
@@ -478,9 +480,11 @@ def main():
         with nested(misc.open(options.log_file, 'w'),
                     misc.open(options.replay_file),
                     misc.open(options.ghost_file)) as (log, replay, ghost):
+            window_name = 'Force Pylots of Gravitaar - %s' % level_file_name[:-4]
             window = SimWindow(sim, viewport, 
                                log_stream=log, replay_stream=replay,
-                               ghost_sim=ghost_sim, ghost_stream=ghost)
+                               ghost_sim=ghost_sim, ghost_stream=ghost, 
+                               caption=window_name)
             pyglet.app.run()
 
     if sim.game_end_status == Sim.LEVEL_COMPLETED:

@@ -34,16 +34,18 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.3310522"
-     inkscape:cx="87.282451"
-     inkscape:cy="69.107827"
+     inkscape:zoom="45.469155"
+     inkscape:cx="39.300979"
+     inkscape:cy="29.080347"
      inkscape:current-layer="layer1"
      id="namedview2407"
      showgrid="false"
-     inkscape:window-width="640"
+     inkscape:window-width="1179"
      inkscape:window-height="785"
-     inkscape:window-x="151"
-     inkscape:window-y="59" />
+     inkscape:window-x="244"
+     inkscape:window-y="187"
+     inkscape:object-nodes="true"
+     objecttolerance="1" />
   <metadata
      id="metadata2409">
     <rdf:RDF>
@@ -59,27 +61,6 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <g
-       id="ship"
-       inkscape:label="multishape restitution=0.5">
-      <path
-         inkscape:label="density=1.0"
-         sodipodi:nodetypes="cccc"
-         id="leftship"
-         d="M 31.78795,225.54589 L 28.953304,232.6325 L 31.78795,231.92384 L 31.78795,225.54589 z"
-         style="fill:#0000e2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
-      <path
-         sodipodi:nodetypes="cccc"
-         inkscape:label="density=1.0"
-         id="rightship"
-         d="M 32.496611,231.92384 L 35.331257,232.6325 L 32.496611,225.54589 L 32.496611,231.92384 z"
-         style="fill:#0000ff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
-      <path
-         inkscape:label="#path3180"
-         id="shipmiddle"
-         d="M 32.496611,225.54589 L 31.78795,225.54589 L 31.78795,231.92384 L 32.496611,231.92384 L 32.496611,225.54589 z"
-         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
-    </g>
     <rect
        style="fill:none;fill-opacity:1;stroke:#ff0000;stroke-width:1.22085428;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"
        id="viewport"
@@ -184,5 +165,26 @@
        d="M 6.1265708,198.31333 L 6.1265708,212.8811"
        id="gravity"
        inkscape:label="#path3317" />
+    <path
+       style="fill:#00ffff;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 51.61213,223.614 L 54.295329,219.66812 L 57.92554,223.45616 L 54.295329,216.19574 L 51.61213,223.614 z"
+       id="path2397"
+       inkscape:label="density=1.0 triangulate" />
+    <path
+       style="fill:#00ffff;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 59.819563,219.1946 L 62.502762,211.77634 L 66.132973,219.03676 L 62.502762,215.24872 L 59.819563,219.1946 z"
+       id="path2399"
+       inkscape:label="density=1.0 triangulate" />
+    <path
+       style="fill:#00ff00;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 47.824083,208.22505 L 49.718106,212.96011 L 50.191612,206.33103 L 53.663988,210.11908 L 52.085635,204.59484 L 59.030386,203.33216 L 54.610999,200.96463 L 48.771095,197.96576 L 49.402436,203.33216 L 43.878202,204.59484 L 44.351707,209.80341 L 47.824083,208.22505 z"
+       id="path2401"
+       inkscape:label="density=0.05 triangulate" />
+    <path
+       style="fill:#0000e2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 33.407789,224.53141 L 30.573143,231.61802 L 33.407789,230.90936 L 34.11645,230.90936 L 36.951096,231.61802 L 34.11645,224.53141 L 33.407789,224.53141 z"
+       id="ship"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label="density=1.0 triangulate" />
   </g>
 </svg>

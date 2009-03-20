@@ -1,6 +1,6 @@
 from __future__ import with_statement
 
-from svg_paths import linearize_path, path_area, reverse_path, path_points
+from svg_paths import linearize_path, path_area, reverse_path, path_points, triangulate_path, split_paths
 
 from xml.dom import minidom, Node
 
@@ -66,27 +66,36 @@ def get_body(height, e):
     if e.nodeName == 'rect':
         id, label, sd = shape_common(e)
         x, y, w, h = [float(e.getAttribute(n)) for n in ['x', 'y', 'width', 'height']]
-        return 'rect', id, label, sd, ((x, height - y - h), (w, h))
+        return [('rect', id, label, sd, ((x, height - y - h), (w, h)))]
     if e.nodeName == 'path':
         if e.getAttribute('sodipodi:type') == 'arc':
             id, label, sd = shape_common(e)
             x, y, rx, ry = [float(e.getAttribute('sodipodi:'+n))
                             for n in ['cx', 'cy', 'rx', 'ry']]
             transform = get_transform(e)
-            return 'circle', id, label, sd, ((x, height-y), (rx, ry))
+            return [('circle', id, label, sd, ((x, height-y), (rx, ry)))]
         else:
             id, label, sd = shape_common(e)
             path = e.getAttribute('d')
             path = linearize_path(path)
-            # Make sure that closed paths are defined clockwise
+            # Make sure that closed paths are defined counter clockwise
             if path.split()[-1] == 'z' and path_area(path) > 0.0:
                 path = reverse_path(path)
-            points = path_points(path)
-            #points = [tuple(map(float, e.split(',')))
-                      #for e in path.split() if len(e) > 1]
-            points = [(x, height - y) for x, y in points]
-            name = 'polygon' if path.split()[-1] == 'z' else 'path'
-            return name, id, label, sd, points
+            is_polygon = path.split()[-1] == 'z'
+            name = 'polygon' if is_polygon else 'path'
+            if is_polygon and 'triangulate' in label:
+                convex_path = triangulate_path(path)
+                paths = split_paths(convex_path)
+            else:
+                paths = [path]
+            parts = []
+            for path in paths:
+                points = path_points(path)
+                points = [(x, height - y) for x, y in points]
+                parts.append((name, id, label, sd, points))
+            #return [(name, id, label, sd, points)]
+            return parts
+    return []
 
 def body_iter(height, es):
     #level = 0
@@ -101,8 +110,14 @@ def body_iter(height, es):
                     # Update matrix & z-value
             else:
                 b = get_body(height, e)
-                if b:
-                    yield b
+                if len(b) > 1:
+                    _, id, label, _, _ = b[0]
+                    yield MULTISHAPE, id, label
+                    yield DOWN
+                for part in b:
+                    yield part
+                if len(b) > 1:
+                    yield UP
 
 def just_bodies(height, es):
     #return (body for body in body_iter(height, es))

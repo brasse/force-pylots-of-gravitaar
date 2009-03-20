@@ -9,22 +9,35 @@ def main():
     #print linearize_path(path)
 
     # Polygon to triangulate
-    path = 'M 193.47779,368.65544 L 278.70015,486.1241 L 439.93164,352.53229 L 541.27715,437.75465 L 690.99211,258.0967 L 511.33416,299.55623 L 359.3159,156.75119 L 345.49605,366.35213 L 241.84724,350.22898 L 255.66708,198.21072 L 193.47779,368.65544'
+    path = 'M 193.47779,368.65544 L 278.70015,486.1241 L 439.93164,352.53229 L 541.27715,437.75465 L 690.99211,258.0967 L 511.33416,299.55623 L 359.3159,156.75119 L 345.49605,366.35213 L 241.84724,350.22898 L 255.66708,198.21072 z'
+    #path = reverse_path(path)
     print triangulate_path(path)
 
 def point_in_triangle(p1, p2, p3, p):
     for a, b in [(p1, p2), (p2, p3), (p3, p1)]:
-        if polygon_area(a, b, p) > 0:
+        if polygon_area(a, b, p) < 0:
             return False
-
     return True
 
 def triangulate_path(path):
     points = path_points(path)
-    print points
-    print path_area(path)
-    print polygon_area(points)
-    return path
+    if points[0] == points[-1]:
+        points = points[:-1]
+    triangles = []
+    while len(points) > 2:
+        n = len(points)
+        for i in xrange(n):
+            tri = points[(i-1) % n], points[i], points[(i+1) % n]
+            lp, cp, rp = tri
+            is_convex_vertice = polygon_area(lp, cp, rp) < 0
+            if is_convex_vertice and all(not point_in_triangle(rp, cp, lp, p)
+                                         for p in points
+                                         if p not in tri):
+                del points[i]
+                triangles.append((lp, cp, rp, lp))
+                break
+
+    return ' '.join(points_path(t, closed=True) for t in triangles)
 
 def linearize_path(path):
     """
@@ -107,6 +120,14 @@ def path_points(path):
               for e in path.split() if len(e) > 1]
     return points
 
+def points_path(points, closed=False):
+    path = ['M %f,%f' % (points[0])]
+    for point in points[1:]:
+        path.append('L %f,%f' % point)
+    if closed:
+        path.append('z')
+    return ' '.join(path)
+
 def get_path(path):
     regex = re.compile('([MLCz])([-\d., ]*)')
     return ((match.group(1),
@@ -114,8 +135,8 @@ def get_path(path):
              for p in match.group(2).split()))
              for match in regex.finditer(path))
 
-def split_paths(path):
-    return ['M%s' % p for p in s.split('M')[1:]]
+def split_paths(jumping_path):
+    return ['M%s' % p for p in jumping_path.split('M')[1:]]
 
 def reverse_path(path):
     new_type = 'M'
@@ -132,7 +153,10 @@ def reverse_path(path):
         new_path.append('z')
     return ' '.join(new_path)
 
-def polygon_area(points):
+def polygon_area(*points):
+    """
+    http://local.wasp.uwa.edu.au/~pbourke/geometry/clockwise/
+    """
     n = len(points)
     a = 0
     for i in xrange(n):
@@ -143,27 +167,7 @@ def polygon_area(points):
     return a / 2.0
 
 def path_area(path):
-    """
-    http://local.wasp.uwa.edu.au/~pbourke/geometry/clockwise/
-    """
-    return polygon_area(path_points(path))
-    """
-    a = 0
-    for type, cs in get_path(path):
-        if type == 'M':
-            last_p = cs.next()
-        elif type == 'L':
-            p = cs.next()
-            lx, ly = last_p
-            x, y = p
-            a += lx * y - x * ly
-            last_p = p
-        elif type == 'z':
-            pass
-        else:
-            assert False
-    return a / 2.0
-    """
+    return polygon_area(*path_points(path))
 
 
 if __name__ == '__main__':

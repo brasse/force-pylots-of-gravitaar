@@ -231,7 +231,7 @@ class Sim(object):
         if not self.is_ghost:
             self.check_game_end_condition()
         
-def draw_world(world, color_damping=1.0):
+def draw_world(world, color_transform=lambda x:x):
     def draw_shape(shape):
         def draw_circle(shape):
             circle = shape.asCircle()
@@ -277,7 +277,8 @@ def draw_world(world, color_damping=1.0):
         glRotatef(math.degrees(angle), 0.0, 0.0, 1.0)
         for shape in body:
             color = shape.GetUserData()['color']
-            glColor3f(*(c * color_damping for c in color))
+            glColor3f(*color_transform(color))
+#            glColor3f(*(c * color_damping for c in color))
             draw_shape(shape)
         glPopMatrix()
 
@@ -359,7 +360,12 @@ class SimWindow(pyglet.window.Window):
         glClearColor(0.3, 0.3, 0.4, 1.0)
         self.clear()
         if self.ghost_sim:
-            draw_world(self.ghost_sim.world, self.GHOST_COLOR_DAMPING)
+            def damp(color):
+                return tuple(c * self.GHOST_COLOR_DAMPING for c in color)
+            def gray_scale(color):
+                c = sum(color) / 3.0
+                return c,c,c
+            draw_world(self.ghost_sim.world, gray_scale)
         draw_world(self.sim.world)
 
     def on_key_press(self, symbol, modifiers):

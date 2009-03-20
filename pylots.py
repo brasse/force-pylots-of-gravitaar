@@ -95,8 +95,9 @@ class Sim(object):
     GAME_OVER = object()
     LEVEL_COMPLETED = object()
 
-    def __init__(self, width, height, winning_condition):
+    def __init__(self, width, height, winning_condition, is_ghost=False):
         self.winning_condition = winning_condition
+        self.is_ghost = is_ghost
         self.time_step = 1.0 / 60.0
         self.steps_taken = 0
         self.thrust = False
@@ -227,9 +228,10 @@ class Sim(object):
         vel_iters, pos_iters = 10, 8
         self.world.Step(self.time_step, vel_iters, pos_iters)
         self.handle_emitted_signals()
-        self.check_game_end_condition()
+        if not self.is_ghost:
+            self.check_game_end_condition()
         
-def draw_world(world):
+def draw_world(world, color_damping=1.0):
     def draw_shape(shape):
         def draw_circle(shape):
             circle = shape.asCircle()
@@ -275,14 +277,16 @@ def draw_world(world):
         glRotatef(math.degrees(angle), 0.0, 0.0, 1.0)
         for shape in body:
             color = shape.GetUserData()['color']
-            glColor3f(*color)
+            glColor3f(*(c * color_damping for c in color))
             draw_shape(shape)
         glPopMatrix()
 
 class SimWindow(pyglet.window.Window):
     WINDOW_SIDE = 400
- 
-    def __init__(self, sim, viewport, log_stream=None, replay_stream=None):
+    GHOST_COLOR_DAMPING = 0.4
+    
+    def __init__(self, sim, viewport, log_stream=None, replay_stream=None,
+                 ghost_sim=None, ghost_stream=None):
         pyglet.window.Window.__init__(self,
                                       width=self.WINDOW_SIDE,
                                       height=self.WINDOW_SIDE,
@@ -290,6 +294,8 @@ class SimWindow(pyglet.window.Window):
         self.sim = sim
         self.log_stream = log_stream
         self.replay_stream = replay_stream
+        self.ghost_sim = ghost_sim
+        self.ghost_stream = ghost_stream
         self.time = 0
         (x, y), (w, h) = viewport
         self.camera_position = (x + w/2, y + h/2)
@@ -306,14 +312,24 @@ class SimWindow(pyglet.window.Window):
             if self.replay_stream:
                 try:
                     thrust, turn_direction = pickle.load(self.replay_stream)
+                    self.sim.ship.thrust = thrust
+                    self.sim.ship.turn_direction = turn_direction
                 except EOFError:
                     pyglet.app.exit()
                     break
-                self.sim.ship.thrust = thrust
-                self.sim.ship.turn_direction = turn_direction
+            if self.ghost_stream:
+                try:
+                    thrust, turn_direction = pickle.load(self.ghost_stream)
+                    self.ghost_sim.ship.thrust = thrust
+                    self.ghost_sim.ship.turn_direction = turn_direction
+                except EOFError:
+                    self.ghost_sim.ship.thrust = False
+                    self.ghost_sim.ship.turn_direction = 0
             if self.log_stream:
                 pickle.dump((self.sim.ship.thrust,
                              self.sim.ship.turn_direction), self.log_stream)
+            if self.ghost_sim:
+                self.ghost_sim.step()
             self.sim.step()
 
     def update_camera_position(self):
@@ -342,6 +358,8 @@ class SimWindow(pyglet.window.Window):
 
         glClearColor(0.3, 0.3, 0.4, 1.0)
         self.clear()
+        if self.ghost_sim:
+            draw_world(self.ghost_sim.world, self.GHOST_COLOR_DAMPING)
         draw_world(self.sim.world)
 
     def on_key_press(self, symbol, modifiers):
@@ -362,10 +380,10 @@ class SimWindow(pyglet.window.Window):
             elif symbol in [pyglet.window.key.LEFT, pyglet.window.key.RIGHT]:
                 self.sim.ship.turn_direction = 0
 
-def make_sim(file):
+def make_sim(file, is_ghost=False):
     header, bodies = read_level(file)
     sim = Sim(header['width'], header['height'],
-              set(header['winning_condition']))
+              set(header['winning_condition']), is_ghost=is_ghost)
     for body in bodies:
         body_id = body[0]
         if body_id == 'viewport':
@@ -397,6 +415,8 @@ def main():
                       help='Write log to FILE.')
     parser.add_option('-r', '--replay', dest='replay_file', metavar='FILE', 
                       help='Replay moves from FILE.')
+    parser.add_option('-g', '--ghost', dest='ghost_file', metavar='FILE', 
+                      help='Replay ghost moves from FILE.')
     parser.add_option('-H', '--headless', dest='headless', action='store_true',
                       help='Replay without displaying graphics.')
     options, args = parser.parse_args()
@@ -406,16 +426,22 @@ def main():
 
     if len(args) < 1:
         parser.error('Level file name must be given. ')
+
     sim, viewport = make_sim(args[0])
+    ghost_sim = None
+    if (options.ghost_file):
+        ghost_sim, _ = make_sim(args[0], is_ghost=True)
 
     if options.headless:
         with open(options.replay_file) as f:
             headless(sim, f)
     else:
         with nested(misc.open(options.log_file, 'w'),
-                    misc.open(options.replay_file)) as (log, replay):
+                    misc.open(options.replay_file),
+                    misc.open(options.ghost_file)) as (log, replay, ghost):
             window = SimWindow(sim, viewport, 
-                               log_stream=log, replay_stream=replay)
+                               log_stream=log, replay_stream=replay,
+                               ghost_sim=ghost_sim, ghost_stream=ghost)
             pyglet.app.run()
 
     if sim.game_end_status == Sim.LEVEL_COMPLETED:

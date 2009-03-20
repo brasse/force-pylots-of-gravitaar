@@ -65,8 +65,7 @@ class Ship(object):
     def __init__(self, body):
         self.body = body
         self.turn_speed = 2
-        local_mass_center_x, _ = body.GetLocalCenter().tuple()
-        self.acceleration_force = (local_mass_center_x, 1500)
+        self.acceleration_force = (0, 1500)
         self.thrust = False
         self.turn_direction = 0
 
@@ -102,6 +101,7 @@ class Sim(object):
         self.steps_taken = 0
         self.thrust = False
         self.turn_direction = 0
+        self.forces = []
         self.accumulated_signals = set()
         self.signal_listeners = defaultdict(list)
         self.game_end_status = None
@@ -197,6 +197,30 @@ class Sim(object):
             self.game_end_status = self.LEVEL_COMPLETED
             pyglet.app.exit()
 
+    def find_body(self, id):
+        # Searching all of the bodies is not OK. Needs to be fixed.
+        # Perhaps add a dictionary with all bodies.
+        for body in self.world:
+            data = body.GetUserData()
+            if data and data['id'] == id:
+                return body
+        return None
+
+    def apply_forces(self):
+        for id, force in self.forces:
+            body = self.find_body(id)
+            if body:
+                p = body.GetWorldCenter()
+                body.ApplyForce(force, p)
+
+    def add_force(self, force_data):
+        id, label, force = force_data
+        (p1x, p1y), (p2x, p2y) = force[0][4]
+        x, y = p2x-p1x, p2y-p1y
+        k = float(label.get('multiplier', 1.0))
+        apply_to = label['applies_force']
+        self.forces.append((apply_to, (k*x, k*y)))
+
     def add_object(self, body_data):
         id, label, shapes = body_data
 
@@ -204,6 +228,10 @@ class Sim(object):
             # This body should not created now. It will be created when
             # its creation signal is emitted.
             self.set_up_listeners(body_data, label)
+            return None
+
+        if 'applies_force' in label:
+            self.add_force(body_data)
             return None
 
         bodyDef = b2BodyDef()
@@ -224,6 +252,7 @@ class Sim(object):
     def step(self):
         self.steps_taken += 1
         self.ship.apply_controls()
+        self.apply_forces()
         self.emitted_signals = set()
         vel_iters, pos_iters = 10, 8
         self.world.Step(self.time_step, vel_iters, pos_iters)
@@ -278,7 +307,6 @@ def draw_world(world, color_transform=lambda x:x):
         for shape in body:
             color = shape.GetUserData()['color']
             glColor3f(*color_transform(color))
-#            glColor3f(*(c * color_damping for c in color))
             draw_shape(shape)
         glPopMatrix()
 

@@ -291,6 +291,7 @@ class SimWindow(pyglet.window.Window):
         pyglet.window.Window.__init__(self,
                                       width=self.WINDOW_SIDE,
                                       height=self.WINDOW_SIDE,
+                                      resizable=True,
                                       caption='sim')
         self.sim = sim
         self.log_stream = log_stream

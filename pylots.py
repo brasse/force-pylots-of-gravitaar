@@ -406,6 +406,10 @@ class SimWindow(pyglet.window.Window):
                 self.sim.ship.turn_direction = 1
             elif symbol == pyglet.window.key.RIGHT:
                 self.sim.ship.turn_direction = -1
+            elif symbol == pyglet.window.key.F:
+                self.set_fullscreen(not self.fullscreen)
+            elif symbol == pyglet.window.key.ESCAPE:
+                pyglet.app.exit()
 
     def on_key_release(self, symbol, modifiers):
         # If not in replay, respond to ship controls.

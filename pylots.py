@@ -101,6 +101,7 @@ class Sim(object):
         self.steps_taken = 0
         self.thrust = False
         self.turn_direction = 0
+        self.bodies = {}
         self.forces = []
         self.accumulated_signals = set()
         self.signal_listeners = defaultdict(list)
@@ -198,13 +199,7 @@ class Sim(object):
             pyglet.app.exit()
 
     def find_body(self, id):
-        # Searching all of the bodies is not OK. Needs to be fixed.
-        # Perhaps add a dictionary with all bodies.
-        for body in self.world:
-            data = body.GetUserData()
-            if data and data['id'] == id:
-                return body
-        return None
+        return self.bodies.get(id, None)
 
     def apply_forces(self):
         for id, force in self.forces:
@@ -247,6 +242,7 @@ class Sim(object):
                                      ship_triggers=label.get('ship_triggers',
                                                              None)))
         
+        self.bodies[id] = body
         return body
 
     def step(self):
@@ -337,21 +333,19 @@ class SimWindow(pyglet.window.Window):
 
     def update(self, dt):
         self.time += dt
+        def steer_by_stream(ship, stream):
+            ship.thrust, ship.turn_direction = pickle.load(stream)
         while self.time > self.sim.time_step:
             self.time -= self.sim.time_step
             if self.replay_stream:
                 try:
-                    thrust, turn_direction = pickle.load(self.replay_stream)
-                    self.sim.ship.thrust = thrust
-                    self.sim.ship.turn_direction = turn_direction
+                    steer_by_stream(self.sim.ship, self.replay_stream)
                 except EOFError:
                     pyglet.app.exit()
                     break
             if self.ghost_stream:
                 try:
-                    thrust, turn_direction = pickle.load(self.ghost_stream)
-                    self.ghost_sim.ship.thrust = thrust
-                    self.ghost_sim.ship.turn_direction = turn_direction
+                    steer_by_stream(self.ghost_sim.ship, self.ghost_stream)
                 except EOFError:
                     self.ghost_sim.ship.thrust = False
                     self.ghost_sim.ship.turn_direction = 0

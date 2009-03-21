@@ -159,8 +159,9 @@ class Sim(object):
         shape_def.restitution = float(label.get('restitution',
                                                 shape_def.restitution))
         if 'sensor' in label:
-            shape_def.isSensor = True            
-        shape_def.SetUserData(dict(color=color))
+            shape_def.isSensor = True
+        shape_def.SetUserData(dict(color=color,
+                                   invisible=('invisible' in label)))
         body.CreateShape(shape_def)
         return color
 
@@ -301,9 +302,11 @@ def draw_world(world, color_transform=lambda x:x):
         glTranslatef(x, y, 0.0)
         glRotatef(math.degrees(angle), 0.0, 0.0, 1.0)
         for shape in body:
-            color = shape.GetUserData()['color']
-            glColor3f(*color_transform(color))
-            draw_shape(shape)
+            shape_data = shape.GetUserData()
+            if not shape_data.get('invisible', False):
+                color = shape_data['color']
+                glColor3f(*color_transform(color))
+                draw_shape(shape)
         glPopMatrix()
 
 class SimWindow(pyglet.window.Window):

@@ -288,14 +288,6 @@
        d="M 24.80315,39.133858 L 29.182836,39.133858"
        id="path3185"
        inkscape:label="applies_force=button multiplier=30" />
-    <rect
-       style="fill:#008000;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect2414"
-       width="3.5433071"
-       height="7.0866141"
-       x="102.75591"
-       y="40.551182"
-       inkscape:label="invisible" />
   </g>
   <g
      inkscape:label="Dynamics"

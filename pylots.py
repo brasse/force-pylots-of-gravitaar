@@ -419,7 +419,8 @@ class SimWindow(pyglet.window.Window):
             elif symbol in [pyglet.window.key.LEFT, pyglet.window.key.RIGHT]:
                 self.sim.ship.turn_direction = 0
 
-def make_sim(file, is_ghost=False):
+def make_sim(file_name, is_ghost=False):
+    file = pyglet.resource.file(file_name)
     header, bodies = read_level(file)
     sim = Sim(header['width'], header['height'],
               set(header['winning_condition']), is_ghost=is_ghost)

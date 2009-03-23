@@ -224,9 +224,12 @@ class Sim(object):
         body2_id = label['body2']
         position = joint[0][4][0]
         joint_def = b2RevoluteJointDef()
-        joint_def.body1 = self.bodies[body1_id]
-        joint_def.body2 = self.bodies[body2_id]
-        joint_def.anchorPoint = position
+        joint_def.Initialize(self.bodies[body1_id], self.bodies[body2_id],
+                             position)
+#        joint_def.body1 = self.bodies[body1_id]
+#        joint_def.body2 = self.bodies[body2_id]
+#        joint_def.anchorPoint = position
+#        print joint_def.anchorPoint
         self.world.CreateJoint(joint_def)
         
     def add_object(self, body_data):

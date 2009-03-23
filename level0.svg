@@ -48,8 +48,8 @@
      inkscape:showpageshadow="true"
      inkscape:window-width="1270"
      inkscape:window-height="743"
-     inkscape:window-x="1"
-     inkscape:window-y="0"
+     inkscape:window-x="2"
+     inkscape:window-y="30"
      inkscape:snap-global="true">
     <inkscape:grid
        type="xygrid"
@@ -314,6 +314,14 @@
        sodipodi:ry="0.70866144"
        d="M 38.976377,30.629921 A 0.70866144,0.70866144 0 1 1 37.559054,30.629921 A 0.70866144,0.70866144 0 1 1 38.976377,30.629921 z"
        inkscape:label="revolute_joint body1=door body2=door_anchor" />
+    <rect
+       style="fill:#ff00ff;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect2419"
+       width="1.4173229"
+       height="1.4173229"
+       x="26.929134"
+       y="31.338583"
+       inkscape:label="invisible destroyed_by=push" />
   </g>
   <g
      inkscape:label="Dynamics"

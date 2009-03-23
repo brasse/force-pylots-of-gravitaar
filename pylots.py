@@ -185,11 +185,11 @@ class Sim(object):
                     listener_list.remove(e)
                     self.world.DestroyBody(listener)
                 elif action == 'created_by':
+                    listener_list.remove(e)
                     label = listener[1]
                     # If we do not remove the created_by attribute from label,
                     # this object will not be creted by add_object().
                     del label['created_by']
-                    listener_list.remove(e)
                     self.add_object(listener)
 
     def check_game_end_condition(self):
@@ -222,7 +222,7 @@ class Sim(object):
         id, label, joint = joint_data
         body1_id = label['body1']
         body2_id = label['body2']
-        position = joint[0][4][0]
+        position = joint[0][4][0] # Position, for instance center of circle
         joint_def = b2RevoluteJointDef()
         joint_def.Initialize(self.bodies[body1_id], self.bodies[body2_id],
                              position)
@@ -234,7 +234,11 @@ class Sim(object):
         if 'created_by' in label:
             # This body should not created now. It will be created when
             # its creation signal is emitted.
-            self.set_up_listeners(body_data, label)
+            # We must remove the destroyed_by attribute, because it cannot
+            # be destroyed yet, since it hasn't even been created. 
+            no_destroy_label = label.copy()
+            del no_destroy_label['destroyed_by']
+            self.set_up_listeners(body_data, no_destroy_label)
             return None
 
         if 'applies_force' in label:

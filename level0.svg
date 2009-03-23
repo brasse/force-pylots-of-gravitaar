@@ -37,18 +37,18 @@
      objecttolerance="10"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.3278987"
-     inkscape:cx="85.213875"
-     inkscape:cy="148.84899"
+     inkscape:zoom="16.087117"
+     inkscape:cx="31.424372"
+     inkscape:cy="168.7573"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="true"
      units="mm"
      borderlayer="true"
      inkscape:showpageshadow="true"
-     inkscape:window-width="1280"
-     inkscape:window-height="785"
-     inkscape:window-x="0"
+     inkscape:window-width="1270"
+     inkscape:window-height="743"
+     inkscape:window-x="1"
      inkscape:window-y="0"
      inkscape:snap-global="true">
     <inkscape:grid
@@ -56,7 +56,7 @@
        id="grid2472"
        visible="true"
        enabled="true"
-       units="mm"
+       units="px"
        spacingx="0.2mm"
        spacingy="0.2mm" />
   </sodipodi:namedview>
@@ -276,13 +276,21 @@
        x="18.425198"
        y="34.173229" />
     <rect
+       style="fill:#00ffff;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="door_anchor"
+       width="1.4173229"
+       height="4.2519684"
+       x="37.559055"
+       y="27.086615"
+       inkscape:label="invisible" />
+    <rect
        style="fill:#008000;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect3237"
-       width="14.173228"
-       height="3.5433071"
-       x="24.80315"
+       id="door"
+       width="11.338583"
+       height="1.4173237"
+       x="27.637794"
        y="29.921259"
-       inkscape:label="density=10 created_by=push" />
+       inkscape:label="density=10" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#d36bd1;stroke-width:0.30000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 24.80315,39.133858 L 29.182836,39.133858"
@@ -296,6 +304,16 @@
        x="102.75591"
        y="40.551182"
        inkscape:label="invisible" />
+    <path
+       sodipodi:type="arc"
+       style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path2417"
+       sodipodi:cx="38.267715"
+       sodipodi:cy="30.629921"
+       sodipodi:rx="0.70866144"
+       sodipodi:ry="0.70866144"
+       d="M 38.976377,30.629921 A 0.70866144,0.70866144 0 1 1 37.559054,30.629921 A 0.70866144,0.70866144 0 1 1 38.976377,30.629921 z"
+       inkscape:label="revolute_joint body1=door body2=door_anchor" />
   </g>
   <g
      inkscape:label="Dynamics"

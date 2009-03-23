@@ -5,6 +5,7 @@ from level_loader import read_level
 
 import math
 import pickle
+import pprint
 import sys
 from collections import defaultdict
 from contextlib import nested
@@ -217,6 +218,17 @@ class Sim(object):
         apply_to = label['applies_force']
         self.forces.append((apply_to, (k*x, k*y)))
 
+    def add_joint(self, joint_data):
+        id, label, joint = joint_data
+        body1_id = label['body1']
+        body2_id = label['body2']
+        position = joint[0][4][0]
+        joint_def = b2RevoluteJointDef()
+        joint_def.body1 = self.bodies[body1_id]
+        joint_def.body2 = self.bodies[body2_id]
+        joint_def.anchorPoint = position
+        self.world.CreateJoint(joint_def)
+        
     def add_object(self, body_data):
         id, label, shapes = body_data
 
@@ -228,6 +240,10 @@ class Sim(object):
 
         if 'applies_force' in label:
             self.add_force(body_data)
+            return None
+
+        if 'revolute_joint' in label:
+            self.add_joint(body_data)
             return None
 
         bodyDef = b2BodyDef()
@@ -419,10 +435,12 @@ class SimWindow(pyglet.window.Window):
 def make_sim(file_name, is_ghost=False):
     file = pyglet.resource.file(file_name)
     header, bodies = read_level(file)
+    joints = []
     sim = Sim(header['width'], header['height'],
               set(header['winning_condition']), is_ghost=is_ghost)
     for body in bodies:
         body_id = body[0]
+        label = body[1]
         if body_id == 'viewport':
             viewport = body[2][0][4]
         elif body_id == 'gravity':
@@ -430,10 +448,17 @@ def make_sim(file_name, is_ghost=False):
             x, y = p2x-p1x, p2y-p1y
 
             sim.world.SetGravity(b2Vec2(x, y))
+        elif 'revolute_joint' in label:
+            # Create joints last.
+            joints.append(body)
         else:
             added = sim.add_object(body)
             if body_id == 'ship':
                 sim.set_ship_body(added)
+
+    for joint in joints:
+        sim.add_object(joint)
+
     return sim, viewport
 
 def headless(sim, replay_stream):

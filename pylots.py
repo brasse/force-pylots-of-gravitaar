@@ -506,7 +506,7 @@ def main():
     sim, viewport, background = make_sim(level_file_name)
     ghost_sim = None
     if (options.ghost_file):
-        ghost_sim, _ = make_sim(args[0], is_ghost=True)
+        ghost_sim, _, _ = make_sim(level_file_name, is_ghost=True)
 
     if options.headless:
         with open(options.replay_file) as f:

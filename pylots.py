@@ -332,7 +332,8 @@ class SimWindow(pyglet.window.Window):
     WINDOW_SIDE = 400
     GHOST_COLOR_DAMPING = 0.4
     
-    def __init__(self, sim, viewport, log_stream=None, replay_stream=None,
+    def __init__(self, sim, viewport, background, log_stream=None, 
+                 replay_stream=None,
                  ghost_sim=None, ghost_stream=None, caption='sim'):
         pyglet.window.Window.__init__(self,
                                       width=self.WINDOW_SIDE,
@@ -345,6 +346,7 @@ class SimWindow(pyglet.window.Window):
         self.ghost_sim = ghost_sim
         self.ghost_stream = ghost_stream
         self.time = 0
+        self.background = background + (1.0,)
         (x, y), (w, h) = viewport
         self.camera_position = (x + w/2, y + h/2)
         self.viewport_model_height = h
@@ -402,7 +404,8 @@ class SimWindow(pyglet.window.Window):
                 -1.0, 1.0)
         glMatrixMode(GL_MODELVIEW)
 
-        glClearColor(0.3, 0.3, 0.4, 1.0)
+        #glClearColor(0.3, 0.3, 0.4, 1.0)
+        glClearColor(*self.background)
         self.clear()
         if self.ghost_sim:
             def damp(color):
@@ -436,13 +439,17 @@ class SimWindow(pyglet.window.Window):
                 self.sim.ship.turn_direction = 0
 
 def make_sim(file_name, is_ghost=False):
-    file = pyglet.resource.file(file_name)
+    #file = pyglet.resource.file(file_name)
+    file = open(file_name)
     header, bodies = read_level(file)
     joints = []
     sim = Sim(header['width'], header['height'],
               set(header['winning_condition']), is_ghost=is_ghost)
     for body in bodies:
         body_id = body[0]
+        if body_id == 'pagecolor':
+            background = parse_hex_color(body[1])
+            continue
         label = body[1]
         if body_id == 'viewport':
             viewport = body[2][0][4]
@@ -462,7 +469,7 @@ def make_sim(file_name, is_ghost=False):
     for joint in joints:
         sim.add_object(joint)
 
-    return sim, viewport
+    return sim, viewport, background
 
 def headless(sim, replay_stream):
     try:
@@ -494,7 +501,7 @@ def main():
 
     level_file_name = args[0]
 
-    sim, viewport = make_sim(level_file_name)
+    sim, viewport, background = make_sim(level_file_name)
     ghost_sim = None
     if (options.ghost_file):
         ghost_sim, _ = make_sim(args[0], is_ghost=True)
@@ -507,7 +514,7 @@ def main():
                     misc.open(options.replay_file),
                     misc.open(options.ghost_file)) as (log, replay, ghost):
             window_name = 'Force Pylots of Gravitaar - %s' % level_file_name[:-4]
-            window = SimWindow(sim, viewport, 
+            window = SimWindow(sim, viewport, background, 
                                log_stream=log, replay_stream=replay,
                                ghost_sim=ghost_sim, ghost_stream=ghost, 
                                caption=window_name)

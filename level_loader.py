@@ -67,7 +67,7 @@ def get_body(height, e):
         id, label, sd = shape_common(e)
         x, y, w, h = [float(e.getAttribute(n)) for n in ['x', 'y', 'width', 'height']]
         return [('rect', id, label, sd, ((x, height - y - h), (w, h)))]
-    if e.nodeName == 'path':
+    elif e.nodeName == 'path':
         if e.getAttribute('sodipodi:type') == 'arc':
             id, label, sd = shape_common(e)
             x, y, rx, ry = [float(e.getAttribute('sodipodi:'+n))
@@ -95,6 +95,8 @@ def get_body(height, e):
                 parts.append((name, id, label, sd, points))
             #return [(name, id, label, sd, points)]
             return parts
+    elif e.nodeName == 'sodipodi:namedview':
+        return [('pagecolor', e.getAttribute('pagecolor'))]
     return []
 
 def body_iter(height, es):
@@ -142,9 +144,11 @@ def just_bodies(height, es):
                     # Is this a good thing? id and label is lost!
                     subshapes.append((type, sub_id, sub_label, sd, geometry))
             yield id, label, subshapes
-        else:
+        elif len(body) == 5:
             type, id, label, sd, geometry = body
             yield id, label, [(type, id, label, sd, geometry)]
+        else:
+            yield body
 
 def get_winning_condition(node):
     wc_attr = node.getAttribute('winning_condition')

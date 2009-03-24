@@ -237,7 +237,8 @@ class Sim(object):
             # We must remove the destroyed_by attribute, because it cannot
             # be destroyed yet, since it hasn't even been created. 
             no_destroy_label = label.copy()
-            del no_destroy_label['destroyed_by']
+            if 'destroyed_by' in no_destroy_label:
+                del no_destroy_label['destroyed_by']
             self.set_up_listeners(body_data, no_destroy_label)
             return None
 

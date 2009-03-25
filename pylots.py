@@ -302,7 +302,8 @@ def draw_world(world, color_transform=lambda x:x):
 
         def draw_edge(shape):
             data = shape.GetUserData()
-            if not 'display_list' in data:
+            list = data.get('display_list', None)
+            if not list:
                 list = glGenLists(1)
                 glNewList(list, GL_COMPILE)
                 edge = shape.asEdge()
@@ -314,8 +315,7 @@ def draw_world(world, color_transform=lambda x:x):
                     edge = edge.GetNextEdge()
                 glEndList()
                 data['display_list'] = list
-            else:
-                glCallList(data['display_list'])
+            glCallList(list)
 
         draw_function = \
             {

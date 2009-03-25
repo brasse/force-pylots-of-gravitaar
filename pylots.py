@@ -163,8 +163,8 @@ class Sim(object):
             shape_def.isSensor = True
         shape_def.SetUserData(dict(color=color,
                                    invisible=('invisible' in label)))
-        body.CreateShape(shape_def)
-        return color
+        shape = body.CreateShape(shape_def)
+        return shape
 
     def signal(self, signal):
         self.emitted_signals.add(signal)
@@ -229,7 +229,7 @@ class Sim(object):
         self.world.CreateJoint(joint_def)
         
     def add_object(self, body_data):
-        id, label, shapes = body_data
+        id, label, shape_data = body_data
 
         if 'created_by' in label:
             # This body should not created now. It will be created when
@@ -255,11 +255,11 @@ class Sim(object):
         body = self.world.CreateBody(bodyDef)
         self.set_up_listeners(body, label)
 
-        for shape in shapes:
-            self.add_shape(body, shape)
+        body_shapes = [self.add_shape(body, shape) for shape in shape_data]
 
         body.SetMassFromShapes()
         body.SetUserData(defaultdict(lambda: None, id=id,
+                                     shapes=body_shapes,
                                      triggers=label.get('triggers', None),
                                      ship_triggers=label.get('ship_triggers',
                                                              None)))
@@ -302,10 +302,12 @@ def draw_world(world, color_transform=lambda x:x):
 
         def draw_edge(shape):
             edge = shape.asEdge()
-            glBegin(GL_LINES)
-            glVertex2f(*edge.GetVertex1().tuple())
-            glVertex2f(*edge.GetVertex2().tuple())
-            glEnd()
+            while edge:
+                glBegin(GL_LINES)
+                glVertex2f(*edge.GetVertex1().tuple())
+                glVertex2f(*edge.GetVertex2().tuple())
+                glEnd()
+                edge = edge.GetNextEdge()
 
         draw_function = \
             {
@@ -319,16 +321,17 @@ def draw_world(world, color_transform=lambda x:x):
         x, y = body.GetPosition().tuple()
         angle = body.GetAngle()
         body_data = body.GetUserData()
-        glPushMatrix()
-        glTranslatef(x, y, 0.0)
-        glRotatef(math.degrees(angle), 0.0, 0.0, 1.0)
-        for shape in body:
-            shape_data = shape.GetUserData()
-            if not shape_data.get('invisible', False):
-                color = shape_data['color']
-                glColor3f(*color_transform(color))
-                draw_shape(shape)
-        glPopMatrix()
+        if body_data:
+            glPushMatrix()
+            glTranslatef(x, y, 0.0)
+            glRotatef(math.degrees(angle), 0.0, 0.0, 1.0)
+            for shape in body_data['shapes']:
+                shape_data = shape.GetUserData()
+                if not shape_data.get('invisible', False):
+                    color = shape_data['color']
+                    glColor3f(*color_transform(color))
+                    draw_shape(shape)
+            glPopMatrix()
 
 class SimWindow(pyglet.window.Window):
     WINDOW_SIDE = 400

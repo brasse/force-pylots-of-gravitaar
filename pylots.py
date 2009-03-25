@@ -301,13 +301,21 @@ def draw_world(world, color_transform=lambda x:x):
             glEnd()
 
         def draw_edge(shape):
-            edge = shape.asEdge()
-            while edge:
-                glBegin(GL_LINES)
-                glVertex2f(*edge.GetVertex1().tuple())
-                glVertex2f(*edge.GetVertex2().tuple())
-                glEnd()
-                edge = edge.GetNextEdge()
+            data = shape.GetUserData()
+            if not 'display_list' in data:
+                list = glGenLists(1)
+                glNewList(list, GL_COMPILE)
+                edge = shape.asEdge()
+                while edge:
+                    glBegin(GL_LINES)
+                    glVertex2f(*edge.GetVertex1().tuple())
+                    glVertex2f(*edge.GetVertex2().tuple())
+                    glEnd()
+                    edge = edge.GetNextEdge()
+                glEndList()
+                data['display_list'] = list
+            else:
+                glCallList(data['display_list'])
 
         draw_function = \
             {

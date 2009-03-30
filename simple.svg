@@ -39,14 +39,20 @@
      inkscape:pageshadow="2"
      inkscape:zoom="11.086287"
      inkscape:cx="188.61724"
-     inkscape:cy="83.07185"
+     inkscape:cy="118.04263"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="false"
+     showgrid="true"
      inkscape:window-width="1057"
      inkscape:window-height="961"
      inkscape:window-x="112"
-     inkscape:window-y="44" />
+     inkscape:window-y="44">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2384"
+       visible="true"
+       enabled="true" />
+  </sodipodi:namedview>
   <metadata
      id="metadata2402">
     <rdf:RDF>
@@ -96,5 +102,25 @@
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 151.71896,415.89699 L 158.75468,422.57191 L 168.31604,423.74453"
        id="path2417" />
+    <g
+       id="g2410"
+       inkscape:label="multishape">
+      <rect
+         inkscape:label="density=5.0"
+         y="423.40942"
+         x="216"
+         height="2"
+         width="9"
+         id="rect2386"
+         style="fill:#d40000;fill-opacity:1;stroke:none;stroke-width:1.79999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <rect
+         inkscape:label="density=0.1"
+         y="402.40942"
+         x="216"
+         height="2"
+         width="9"
+         id="rect2388"
+         style="fill:#d40000;fill-opacity:1;stroke:none;stroke-width:1.79999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
   </g>
 </svg>

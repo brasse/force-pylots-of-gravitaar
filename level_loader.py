@@ -110,8 +110,10 @@ def handle_node_namedview(node, header, bodies, transform, label):
 def handle_node_rect(node, header, bodies, transform, label):
     id, l, sd = shape_common(node)
     label.push(l)
-    x, y, w, h = [float(node.getAttribute(n)) for n in ['x', 'y', 'width', 'height']]
-    bodies.append((id, label(), [('rect', id, label(), sd, (transform((x, y + h)), (w, h)))]))
+    x, y, w, h = [float(node.getAttribute(n))
+                  for n in ['x', 'y', 'width', 'height']]
+    bodies.append((id, label(), [('rect', id, label(), sd,
+                                  (transform((x, y + h)), (w, h)))]))
     label.pop()
 
 def handle_node_path(node, header, bodies, transform, label):
@@ -123,7 +125,8 @@ def handle_node_path(node, header, bodies, transform, label):
     if node.getAttribute('sodipodi:type') == 'arc':
         x, y, rx, ry = [float(node.getAttribute('sodipodi:'+n))
                         for n in ['cx', 'cy', 'rx', 'ry']]
-        bodies.append((id, label(), [('circle', id, label(), sd, (transform((x, y)), (rx, ry)))]))
+        bodies.append((id, label(), [('circle', id, label(), sd,
+                                      (transform((x, y)), (rx, ry)))]))
     else:
         path = node.getAttribute('d')
         path = linearize_path(path)
@@ -164,7 +167,8 @@ def parse_subtree(node, header, bodies, transform, label):
             'rect': handle_node_rect, 
             'sodipodi:namedview': handle_node_namedview
             }
-    handlers.get(node.nodeName, handle_node_default)(node, header, bodies, transform, label)
+    handlers.get(node.nodeName, handle_node_default)(node, header,
+                                                     bodies, transform, label)
 
 def read_level(file):
     root = minidom.parse(file)

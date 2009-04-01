@@ -2,9 +2,31 @@ from __future__ import with_statement
 
 from svg_paths import linearize_path, path_area, reverse_path, path_points, triangulate_path, split_paths
 
+import re
 from xml.dom import minidom, Node
 
 # Utils
+
+class Transform(object):
+    def __init__(self, height):
+        self.height = height
+        self.stack = [(0.0, 0.0)]
+
+    def push(self):
+        self.stack.append(self.stack[-1])
+
+    def pop(self):
+        self.stack.pop()
+
+    def translate(self, t):
+        x0, y0 = self.stack[-1]
+        x, y = t
+        self.stack[-1] = x0 + x, y0 + y
+
+    def __call__(self, p):
+        x, y = p
+        tx, ty = self.stack[-1]
+        return x + tx, self.height - (y + ty)
 
 def str_to_dict(s, pair_sep=';', key_value_sep=':'):
     def true_tuple(k, v=True):
@@ -29,6 +51,15 @@ def shape_common(e):
     sd = str_to_dict(e.getAttribute('style'))
     return id, label, sd
 
+def get_transform(e):
+    t_attr = e.getAttribute('transform')
+    re_translate = r'translate\((.+),(.+)\)'
+    m = re.match(re_translate, t_attr)
+    if m:
+        return float(m.group(1)), float(m.group(2))
+    else:
+        return 0.0, 0.0
+        
 def get_winning_condition(node):
     wc_attr = node.getAttribute('winning_condition')
     return [signal.strip() for signal in wc_attr.split(',') if signal != '']
@@ -37,19 +68,22 @@ def get_winning_condition(node):
 
 def handle_node_g(node, header, bodies, transform):
     id, label = element_common(node)
+    t = get_transform(node)
+    transform.push()
+    transform.translate(t)
     if 'multishape' in label:
         mbodies = []
         parse_children(node, header, mbodies, transform)
         bodies.append((id, label, [shapes[0] for _, _, shapes in mbodies]))
     else:
         parse_children(node, header, bodies, transform)
+    transform.pop()
 
 def handle_node_svg(node, header, bodies, transform):
     header.update(width=float(node.getAttribute('width')), 
                   height=float(node.getAttribute('height')),
                   winning_condition=get_winning_condition(node))
-    def transform(x, y):
-        return x, header['height'] - y
+    transform = Transform(header['height'])
     parse_children(node, header, bodies, transform)
 
 def handle_node_namedview(node, header, bodies, transform):
@@ -59,14 +93,17 @@ def handle_node_namedview(node, header, bodies, transform):
 def handle_node_rect(node, header, bodies, transform):
     id, label, sd = shape_common(node)
     x, y, w, h = [float(node.getAttribute(n)) for n in ['x', 'y', 'width', 'height']]
-    bodies.append((id, label, [('rect', id, label, sd, (transform(x, y + h), (w, h)))]))
+    bodies.append((id, label, [('rect', id, label, sd, (transform((x, y + h)), (w, h)))]))
 
 def handle_node_path(node, header, bodies, transform):
+    t = get_transform(node)
+    transform.push()
+    transform.translate(t)
     if node.getAttribute('sodipodi:type') == 'arc':
         id, label, sd = shape_common(node)
         x, y, rx, ry = [float(node.getAttribute('sodipodi:'+n))
                         for n in ['cx', 'cy', 'rx', 'ry']]
-        bodies.append((id, label, [('circle', id, label, sd, (transform(x, y), (rx, ry)))]))
+        bodies.append((id, label, [('circle', id, label, sd, (transform((x, y)), (rx, ry)))]))
     else:
         id, label, sd = shape_common(node)
         path = node.getAttribute('d')
@@ -84,11 +121,12 @@ def handle_node_path(node, header, bodies, transform):
         parts = []
         for path in paths:
             points = path_points(path)
-            points = [transform(x,y) for x, y in points]
+            points = [transform((x,y)) for x, y in points]
             parts.append((name, id, label, sd, points))
         #return [(name, id, label, sd, points)]
         bodies.append((id, label, parts))
-
+    transform.pop()
+    
 def handle_node_default(node, header, bodies, transform):
     #print node.nodeName
     parse_children(node, header, bodies, transform)

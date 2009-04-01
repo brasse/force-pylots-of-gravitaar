@@ -44,9 +44,9 @@
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:window-width="1057"
-     inkscape:window-height="961"
-     inkscape:window-x="112"
-     inkscape:window-y="44">
+     inkscape:window-height="785"
+     inkscape:window-x="132"
+     inkscape:window-y="0">
     <inkscape:grid
        type="xygrid"
        id="grid2384"
@@ -90,15 +90,6 @@
        x="145.27541"
        y="426.48898" />
     <path
-       sodipodi:type="arc"
-       style="fill:#d40000;fill-opacity:1;stroke:none;stroke-width:1.79999994999999990;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="path2413"
-       sodipodi:cx="208.14001"
-       sodipodi:cy="421.715"
-       sodipodi:rx="3.5629601"
-       sodipodi:ry="3.5629601"
-       d="M 211.70297,421.715 A 3.5629601,3.5629601 0 1 1 204.57705,421.715 A 3.5629601,3.5629601 0 1 1 211.70297,421.715 z" />
-    <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 151.71896,415.89699 L 158.75468,422.57191 L 168.31604,423.74453"
        id="path2417" />
@@ -121,6 +112,26 @@
          width="9"
          id="rect2388"
          style="fill:#d40000;fill-opacity:1;stroke:none;stroke-width:1.79999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+    <g
+       id="g2391"
+       transform="translate(-0.1400146,-18.868533)">
+      <path
+         d="M 211.70297,421.715 A 3.5629601,3.5629601 0 1 1 204.57705,421.715 A 3.5629601,3.5629601 0 1 1 211.70297,421.715 z"
+         sodipodi:ry="3.5629601"
+         sodipodi:rx="3.5629601"
+         sodipodi:cy="421.715"
+         sodipodi:cx="208.14001"
+         id="path2413"
+         style="fill:#d40000;fill-opacity:1;stroke:none;stroke-width:1.79999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         sodipodi:type="arc" />
+      <rect
+         y="417.40942"
+         x="198"
+         height="4"
+         width="9"
+         id="rect2389"
+         style="fill:#800080;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     </g>
   </g>
 </svg>

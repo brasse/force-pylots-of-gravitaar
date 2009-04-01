@@ -39,13 +39,13 @@
      inkscape:pageshadow="2"
      inkscape:zoom="11.086287"
      inkscape:cx="188.61724"
-     inkscape:cy="118.04263"
+     inkscape:cy="116.49555"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:window-width="1057"
      inkscape:window-height="785"
-     inkscape:window-x="132"
+     inkscape:window-x="44"
      inkscape:window-y="0">
     <inkscape:grid
        type="xygrid"
@@ -114,23 +114,27 @@
          style="fill:#d40000;fill-opacity:1;stroke:none;stroke-width:1.79999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     </g>
     <g
-       id="g2391"
-       transform="translate(-0.1400146,-18.868533)">
+       id="g2398"
+       transform="translate(-4,0)"
+       inkscape:label="density=1">
       <path
+         inkscape:label="#path2413"
+         transform="translate(-0.1400146,-18.868533)"
          d="M 211.70297,421.715 A 3.5629601,3.5629601 0 1 1 204.57705,421.715 A 3.5629601,3.5629601 0 1 1 211.70297,421.715 z"
          sodipodi:ry="3.5629601"
          sodipodi:rx="3.5629601"
          sodipodi:cy="421.715"
          sodipodi:cx="208.14001"
-         id="path2413"
+         id="SPHERE"
          style="fill:#d40000;fill-opacity:1;stroke:none;stroke-width:1.79999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          sodipodi:type="arc" />
       <rect
-         y="417.40942"
-         x="198"
+         inkscape:label="#rect2389"
+         y="398.40942"
+         x="195"
          height="4"
          width="9"
-         id="rect2389"
+         id="BOXX"
          style="fill:#800080;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     </g>
   </g>

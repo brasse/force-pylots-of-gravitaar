@@ -4,6 +4,7 @@ from svg_paths import linearize_path, path_area, reverse_path, path_points, tria
 
 import copy
 import re
+from contextlib import nested
 from xml.dom import minidom, Node
 
 # Utils
@@ -15,12 +16,19 @@ class LabelStack(object):
     def push(self, label):
         self.stack.append(copy.copy(self.stack[-1]))
         self.stack[-1].update(label)
+        return self
 
     def pop(self):
         self.stack.pop()
 
     def __call__(self):
         return self.stack[-1]
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, *exc_info):
+        self.pop()
 
 class Transform(object):
     def __init__(self, height):
@@ -34,14 +42,22 @@ class Transform(object):
         self.stack.pop()
 
     def translate(self, t):
+        self.push()
         x0, y0 = self.stack[-1]
         x, y = t
         self.stack[-1] = x0 + x, y0 + y
+        return self
 
     def __call__(self, p):
         x, y = p
         tx, ty = self.stack[-1]
         return x + tx, self.height - (y + ty)
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, *exc_info):
+        self.pop()
 
 def str_to_dict(s, pair_sep=';', key_value_sep=':'):
     def true_tuple(k, v=True):
@@ -83,18 +99,15 @@ def get_winning_condition(node):
 
 def handle_node_g(node, header, bodies, transform, label):
     id, l = element_common(node)
-    label.push(l)
     t = get_transform(node)
-    transform.push()
-    transform.translate(t)
-    if 'multishape' in l:
-        mbodies = []
-        parse_children(node, header, mbodies, transform, label)
-        bodies.append((id, label(), [shapes[0] for _, _, shapes in mbodies]))
-    else:
-        parse_children(node, header, bodies, transform, label)
-    transform.pop()
-    label.pop()
+    with nested(label.push(l), transform.translate(t)):
+        if 'multishape' in label():
+            mbodies = []
+            parse_children(node, header, mbodies, transform, label)
+            bodies.append((id, label(),
+                           [shapes[0] for _, _, shapes in mbodies]))
+        else:
+            parse_children(node, header, bodies, transform, label)
 
 def handle_node_svg(node, header, bodies, transform, label):
     header.update(width=float(node.getAttribute('width')), 
@@ -109,48 +122,42 @@ def handle_node_namedview(node, header, bodies, transform, label):
 
 def handle_node_rect(node, header, bodies, transform, label):
     id, l, sd = shape_common(node)
-    label.push(l)
-    x, y, w, h = [float(node.getAttribute(n))
-                  for n in ['x', 'y', 'width', 'height']]
-    bodies.append((id, label(), [('rect', id, label(), sd,
-                                  (transform((x, y + h)), (w, h)))]))
-    label.pop()
+    with label.push(l):
+        x, y, w, h = [float(node.getAttribute(n))
+                      for n in ['x', 'y', 'width', 'height']]
+        bodies.append((id, label(), [('rect', id, label(), sd,
+                                      (transform((x, y + h)), (w, h)))]))
 
 def handle_node_path(node, header, bodies, transform, label):
     id, l, sd = shape_common(node)
-    label.push(l)
     t = get_transform(node)
-    transform.push()
-    transform.translate(t)
-    if node.getAttribute('sodipodi:type') == 'arc':
-        x, y, rx, ry = [float(node.getAttribute('sodipodi:'+n))
-                        for n in ['cx', 'cy', 'rx', 'ry']]
-        bodies.append((id, label(), [('circle', id, label(), sd,
-                                      (transform((x, y)), (rx, ry)))]))
-    else:
-        path = node.getAttribute('d')
-        path = linearize_path(path)
-        # Make sure that closed paths are defined counter clockwise
-        if path.split()[-1] == 'z' and path_area(path) > 0.0:
-            path = reverse_path(path)
-        is_polygon = path.split()[-1] == 'z'
-        name = 'polygon' if is_polygon else 'path'
-        if is_polygon and 'triangulate' in label():
-            convex_path = triangulate_path(path)
-            paths = split_paths(convex_path)
+    with nested(label.push(l), transform.translate(t)):
+        if node.getAttribute('sodipodi:type') == 'arc':
+            x, y, rx, ry = [float(node.getAttribute('sodipodi:'+n))
+                            for n in ['cx', 'cy', 'rx', 'ry']]
+            bodies.append((id, label(), [('circle', id, label(), sd,
+                                          (transform((x, y)), (rx, ry)))]))
         else:
-            paths = [path]
-        parts = []
-        for path in paths:
-            points = path_points(path)
-            points = [transform((x,y)) for x, y in points]
-            parts.append((name, id, label(), sd, points))
-        bodies.append((id, label(), parts))
-    transform.pop()
-    label.pop()
+            path = node.getAttribute('d')
+            path = linearize_path(path)
+            # Make sure that closed paths are defined counter clockwise
+            if path.split()[-1] == 'z' and path_area(path) > 0.0:
+                path = reverse_path(path)
+            is_polygon = path.split()[-1] == 'z'
+            name = 'polygon' if is_polygon else 'path'
+            if is_polygon and 'triangulate' in label():
+                convex_path = triangulate_path(path)
+                paths = split_paths(convex_path)
+            else:
+                paths = [path]
+            parts = []
+            for path in paths:
+                points = path_points(path)
+                points = [transform((x,y)) for x, y in points]
+                parts.append((name, id, label(), sd, points))
+            bodies.append((id, label(), parts))
 
 def handle_node_default(node, header, bodies, transform, label):
-    #print node.nodeName
     parse_children(node, header, bodies, transform, label)
 
 # Level parser

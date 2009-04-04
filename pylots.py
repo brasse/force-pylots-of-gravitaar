@@ -347,7 +347,8 @@ class SimWindow(pyglet.window.Window):
     
     def __init__(self, sim, viewport, background, log_stream=None, 
                  replay_stream=None,
-                 ghost_sim=None, ghost_stream=None, caption='sim'):
+                 ghost_sim=None, ghost_stream=None, music_file=None,
+                 caption='sim'):
         pyglet.window.Window.__init__(self,
                                       width=self.WINDOW_SIDE,
                                       height=self.WINDOW_SIDE,
@@ -364,6 +365,10 @@ class SimWindow(pyglet.window.Window):
         self.camera_position = (x + w/2, y + h/2)
         self.viewport_model_height = h
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
+
+        if music_file:
+            music = pyglet.media.load(music_file)
+            music.play()
 
     def on_resize(self, width, height):
         glViewport(0, 0, width, height)
@@ -504,6 +509,8 @@ def main():
                       help='Replay ghost moves from FILE.')
     parser.add_option('-H', '--headless', dest='headless', action='store_true',
                       help='Replay without displaying graphics.')
+    parser.add_option('-m', '--music', dest='music_file', metavar='FILE', 
+                      help='Play music from FILE.')
     options, args = parser.parse_args()
 
     if options.headless and not options.replay_file:
@@ -530,6 +537,7 @@ def main():
             window = SimWindow(sim, viewport, background, 
                                log_stream=log, replay_stream=replay,
                                ghost_sim=ghost_sim, ghost_stream=ghost, 
+                               music_file=options.music_file,
                                caption=window_name)
             pyglet.app.run()
 

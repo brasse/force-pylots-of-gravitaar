@@ -102,7 +102,7 @@
        inkscape:label="density=1 ship_triggers=foo" />
     <path
        style="fill:#ffff00;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 67.322835,28.346457 L 74.409449,28.346457 L 67.322835,17.716536 L 63.779528,24.80315 L 67.322835,28.346457 z"
+       d="M 67.322835,26.377953 L 74.409449,26.377953 L 67.322835,15.748032 L 63.779528,22.834646 L 67.322835,26.377953 z"
        id="path3179"
        inkscape:label="density=1 ship_triggers=game_over destroyed_by=foo" />
     <path
@@ -292,14 +292,6 @@
        d="M 24.80315,39.133858 L 29.182836,39.133858"
        id="path3185"
        inkscape:label="applies_force=button multiplier=30" />
-    <rect
-       style="fill:#008000;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect2414"
-       width="3.5433071"
-       height="10.62992"
-       x="102.75591"
-       y="29.921259"
-       inkscape:label="invisible" />
     <path
        sodipodi:type="arc"
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
@@ -318,6 +310,14 @@
        x="26.929134"
        y="31.338583"
        inkscape:label="invisible destroyed_by=push" />
+    <rect
+       style="fill:#800080;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="music"
+       width="10.629921"
+       height="7.0866141"
+       x="-17.716536"
+       y="22.834646"
+       inkscape:label="sound file=fabric-revisited.mp3" />
   </g>
   <g
      inkscape:label="Dynamics"

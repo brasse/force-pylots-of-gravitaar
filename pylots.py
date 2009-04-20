@@ -95,9 +95,11 @@ class Sim(object):
     GAME_OVER = object()
     LEVEL_COMPLETED = object()
 
-    def __init__(self, width, height, winning_condition, is_ghost=False):
+    def __init__(self, width, height, winning_condition, is_ghost=False,
+                 signal_listener=None):
         self.winning_condition = winning_condition
         self.is_ghost = is_ghost
+        self.external_signal_listener = signal_listener
         self.time_step = 1.0 / 60.0
         self.steps_taken = 0
         self.thrust = False
@@ -169,7 +171,9 @@ class Sim(object):
     def signal(self, signal):
         self.emitted_signals.add(signal)
         self.accumulated_signals.add(signal)
-        
+        if self.external_signal_listener:
+            self.external_signal_listener(signal)
+
     def set_up_listeners(self, body, label):
         slots = ['destroyed_by', 'created_by']
         for slot in slots:
@@ -347,8 +351,8 @@ class SimWindow(pyglet.window.Window):
     
     def __init__(self, sim, viewport, background, log_stream=None, 
                  replay_stream=None,
-                 ghost_sim=None, ghost_stream=None, music_file=None,
-                 caption='sim'):
+                 ghost_sim=None, ghost_stream=None,
+                 sounds=[], caption='sim'):
         pyglet.window.Window.__init__(self,
                                       width=self.WINDOW_SIDE,
                                       height=self.WINDOW_SIDE,
@@ -359,6 +363,7 @@ class SimWindow(pyglet.window.Window):
         self.replay_stream = replay_stream
         self.ghost_sim = ghost_sim
         self.ghost_stream = ghost_stream
+        self.sounds = sounds
         self.time = 0
         self.background = background + (1.0,)
         (x, y), (w, h) = viewport
@@ -366,9 +371,11 @@ class SimWindow(pyglet.window.Window):
         self.viewport_model_height = h
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
 
-        if music_file:
-            music = pyglet.media.load(music_file)
-            music.play()
+        # Start all sounds that should are not started by a sim signal.
+        for sound_file, started_by in self.sounds:
+            if not started_by:
+                sound = pyglet.media.load(sound_file)
+                sound.play()
 
     def on_resize(self, width, height):
         glViewport(0, 0, width, height)
@@ -460,6 +467,7 @@ def make_sim(file_name, is_ghost=False):
     #file = pyglet.resource.file(file_name)
     file = open(file_name)
     header, bodies = read_level(file)
+    sounds = []
     joints = []
     sim = Sim(header['width'], header['height'],
               set(header['winning_condition']), is_ghost=is_ghost)
@@ -479,6 +487,8 @@ def make_sim(file_name, is_ghost=False):
         elif 'revolute_joint' in label:
             # Create joints last.
             joints.append(body)
+        elif 'sound' in label:
+            sounds.append((label['file'], label.get('started_by', None)))
         else:
             added = sim.add_object(body)
             if body_id == 'ship':
@@ -487,7 +497,7 @@ def make_sim(file_name, is_ghost=False):
     for joint in joints:
         sim.add_object(joint)
 
-    return sim, viewport, background
+    return sim, viewport, background, sounds
 
 def headless(sim, replay_stream):
     try:
@@ -509,8 +519,6 @@ def main():
                       help='Replay ghost moves from FILE.')
     parser.add_option('-H', '--headless', dest='headless', action='store_true',
                       help='Replay without displaying graphics.')
-    parser.add_option('-m', '--music', dest='music_file', metavar='FILE', 
-                      help='Play music from FILE.')
     options, args = parser.parse_args()
 
     if options.headless and not options.replay_file:
@@ -521,10 +529,11 @@ def main():
 
     level_file_name = args[0]
 
-    sim, viewport, background = make_sim(level_file_name)
+    sim, viewport, background, sounds = make_sim(level_file_name)
+    print sounds
     ghost_sim = None
     if (options.ghost_file):
-        ghost_sim, _, _ = make_sim(level_file_name, is_ghost=True)
+        ghost_sim, _, _, _ = make_sim(level_file_name, is_ghost=True)
 
     if options.headless:
         with open(options.replay_file) as f:
@@ -537,8 +546,7 @@ def main():
             window = SimWindow(sim, viewport, background, 
                                log_stream=log, replay_stream=replay,
                                ghost_sim=ghost_sim, ghost_stream=ghost, 
-                               music_file=options.music_file,
-                               caption=window_name)
+                               sounds=sounds, caption=window_name)
             pyglet.app.run()
 
     if sim.game_end_status == Sim.LEVEL_COMPLETED:

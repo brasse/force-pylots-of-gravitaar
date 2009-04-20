@@ -318,6 +318,14 @@
        x="-17.716536"
        y="22.834646"
        inkscape:label="sound file=fabric-revisited.mp3" />
+    <rect
+       style="fill:#800080;fill-opacity:1;stroke:none;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="collect_sound"
+       width="10.629921"
+       height="7.0866141"
+       x="-17.716536"
+       y="33.464565"
+       inkscape:label="sound file=sound8.mp3 started_by=collect1" />
   </g>
   <g
      inkscape:label="Dynamics"

@@ -363,7 +363,6 @@ class SimWindow(pyglet.window.Window):
         self.replay_stream = replay_stream
         self.ghost_sim = ghost_sim
         self.ghost_stream = ghost_stream
-        self.sounds = sounds
         self.time = 0
         self.background = background + (1.0,)
         (x, y), (w, h) = viewport
@@ -371,11 +370,20 @@ class SimWindow(pyglet.window.Window):
         self.viewport_model_height = h
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
 
-        # Start all sounds that should are not started by a sim signal.
-        for sound_file, started_by in self.sounds:
+        self.triggered_sounds = {}
+        for sound_file, started_by in sounds:
+            sound = pyglet.media.load(sound_file)
             if not started_by:
-                sound = pyglet.media.load(sound_file)
+                # Start all sounds that should are not started by a sim signal.
                 sound.play()
+            else:
+                self.triggered_sounds[started_by] = sound
+
+        sim.external_signal_listener = self.sim_signal
+
+    def sim_signal(self, signal):
+        if signal in self.triggered_sounds:
+            self.triggered_sounds[signal].play()
 
     def on_resize(self, width, height):
         glViewport(0, 0, width, height)

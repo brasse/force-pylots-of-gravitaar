@@ -43,14 +43,14 @@ class ContactListener(b2ContactListener):
         c = self.get_ship_collider(b1, b2)
         if c:
             data = c.GetUserData()
-            signal = data['ship_triggers']
-            if signal:
+            signals = data['ship_triggers']
+            for signal in signals:
                 self.signal(signal)
 
         for b in [b1, b2]:
             data = b.GetUserData()
-            signal = data['triggers']
-            if signal:
+            signals = data['triggers']
+            for signal in signals:
                 self.signal(signal)
 
     def Persist(self, point):
@@ -262,12 +262,17 @@ class Sim(object):
         body_shapes = [self.add_shape(body, shape) for shape in shape_data]
 
         body.SetMassFromShapes()
+
+        def signals(label, category):
+            signals = label.get(category, '')
+            return [s.strip() for s in signals.split(',') if s != '']
+        
         body.SetUserData(defaultdict(lambda: None, id=id,
                                      shapes=body_shapes,
-                                     triggers=label.get('triggers', None),
-                                     ship_triggers=label.get('ship_triggers',
-                                                             None)))
-        
+                                     triggers=signals(label, 'triggers'),
+                                     ship_triggers=signals(label,
+                                                           'ship_triggers')))
+
         self.bodies[id] = body
         return body
 
@@ -372,7 +377,7 @@ class SimWindow(pyglet.window.Window):
 
         self.triggered_sounds = {}
         for sound_file, started_by in sounds:
-            sound = pyglet.media.load(sound_file)
+            sound = pyglet.media.load(sound_file, streaming=False)
             if not started_by:
                 # Start all sounds that should are not started by a sim signal.
                 sound.play()

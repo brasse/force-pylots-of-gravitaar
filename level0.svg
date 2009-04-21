@@ -117,7 +117,7 @@
        height="3.5433071"
        x="53.149605"
        y="72.440948"
-       inkscape:label="ship_triggers=collect3 destroyed_by=collect3" />
+       inkscape:label="ship_triggers=collect3,collect destroyed_by=collect3" />
     <rect
        style="fill:#c85647;fill-opacity:1"
        id="rect3163"
@@ -125,7 +125,7 @@
        height="3.5433071"
        x="67.322838"
        y="75.984253"
-       inkscape:label="ship_triggers=collect2 destroyed_by=collect2" />
+       inkscape:label="ship_triggers=collect2,collect destroyed_by=collect2" />
     <rect
        style="fill:none;fill-opacity:1;stroke:#ff0000;stroke-width:0.3991932;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="viewport"
@@ -197,7 +197,7 @@
        height="3.5433071"
        x="88.58268"
        y="40.551182"
-       inkscape:label="ship_triggers=collect1 destroyed_by=collect1 sensor" />
+       inkscape:label="ship_triggers=collect1,collect destroyed_by=collect1 sensor" />
     <path
        sodipodi:type="arc"
        style="fill:#1925f5;fill-opacity:1;stroke:none;stroke-opacity:1"
@@ -325,7 +325,15 @@
        height="7.0866141"
        x="-17.716536"
        y="33.464565"
-       inkscape:label="sound file=collect.mp3 started_by=collect1" />
+       inkscape:label="sound file=collect.mp3 started_by=collect" />
+    <rect
+       style="fill:#b4e56b;fill-opacity:1;stroke:none;stroke-opacity:1;display:inline"
+       id="rect2418"
+       width="3.5433071"
+       height="3.5433071"
+       x="102.54927"
+       y="45.089283"
+       inkscape:label="ship_triggers=collectX,collect destroyed_by=collectX sensor" />
   </g>
   <g
      inkscape:label="Dynamics"

@@ -171,8 +171,6 @@ class Sim(object):
     def signal(self, signal):
         self.emitted_signals.add(signal)
         self.accumulated_signals.add(signal)
-        if self.external_signal_listener:
-            self.external_signal_listener(signal)
 
     def set_up_listeners(self, body, label):
         slots = ['destroyed_by', 'created_by']
@@ -195,6 +193,8 @@ class Sim(object):
                     # this object will not be creted by add_object().
                     del label['created_by']
                     self.add_object(listener)
+            if self.external_signal_listener:
+                self.external_signal_listener(signal)
 
     def check_game_end_condition(self):
         if 'game_over' in self.accumulated_signals:

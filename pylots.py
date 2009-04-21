@@ -538,7 +538,6 @@ def main():
     level_file_name = args[0]
 
     sim, viewport, background, sounds = make_sim(level_file_name)
-    print sounds
     ghost_sim = None
     if (options.ghost_file):
         ghost_sim, _, _, _ = make_sim(level_file_name, is_ghost=True)

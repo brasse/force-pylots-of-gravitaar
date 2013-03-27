@@ -1,0 +1,3 @@
+apt-get install python-pyglet
+apt-get install python-box2d
+apt-get install libavbin0
